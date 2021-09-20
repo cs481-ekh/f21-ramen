@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "655509160020",
+    "project_id": "ema-ramen",
+    "storage_bucket": "ema-ramen.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:655509160020:android:015ac4815acfd46c962dc1",
+        "android_client_info": {
+          "package_name": "com.ramen.ema"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "655509160020-7cr3k1cjtl75mnmcc13mtgb5arhqls8s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ramen.ema",
+            "certificate_hash": "117fccf8ac0ac30787df62287d8b5c9a2169dfe2"
+          }
+        },
+        {
+          "client_id": "655509160020-3f6i5pb9ivi6bn4sdjgqegcjd1dqoups.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbkY9rfPHCnbIgGzW0vHUKInwJiP0R114"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "655509160020-3f6i5pb9ivi6bn4sdjgqegcjd1dqoups.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
