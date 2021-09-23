@@ -7,4 +7,5 @@ if [ "$?" -ne "0" ]; then
 	  echo "Error with flutter build!"
 	  exit 1
 fi
+echo "Build finished without errors."
 exit 0
