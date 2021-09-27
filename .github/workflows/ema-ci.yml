@@ -12,5 +12,5 @@ jobs:
         with:
           channel: 'stable' #dev, alpha, beta...
       - run: ls -la
-      - run: build.sh
-      - run: test.sh
+      - run: ./build.sh
+      - run: ./test.sh
