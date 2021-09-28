@@ -1,5 +1,11 @@
 name: ema-test
-on: [push]
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "*"
 jobs:
   checkout:
     runs-on: ubuntu-latest
