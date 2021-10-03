@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(App()
       // const MaterialApp( // using Material is optional but "good practice"
       //   title: 'EMA',
@@ -25,7 +26,6 @@ class App extends StatefulWidget {
 
   static FirebaseAnalytics analytics = FirebaseAnalytics();
   static FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
-  static FirebaseFirestore firestore = FirebaseFirestore.instance;
 }
 
 class _AppState extends State<App> {
@@ -67,28 +67,52 @@ class _AppState extends State<App> {
   @override
   Widget build(BuildContext context) {
 
-    CollectionReference users = FirebaseFirestore.instance.collection('users');
+    FirebaseAuth auth = FirebaseAuth.instance;
+    auth.userChanges()
+        .listen((User? user){
+      if(user == null){
+        print("Signed OUT");
+      } else{
+        print('Signed IN');
+      }
+    });
 
-    // FirebaseFirestore.instance.collection('users').get().then((QuerySnapshot querySnapshot){
-    //     for (var element in querySnapshot.docs) {print(element["firstName"]); }
-    // });
-
-    Future<void> checkUser() {
-      return users.where('email', isEqualTo: 'test@gmail.com').get().then((value) => {for (var element in value.docs) {print(element["firstName"])}  }).catchError((error) => print("Failed to get user."));
+    Future<void> registerUser(){
+      return auth.createUserWithEmailAndPassword(email: 'paisleydavis@u.boisestate.edu', password: 'abc123')
+      .then((value) => print("User registered..."))
+      .catchError((error) => print(error.code));
     }
 
-    Future<void> addUser() {
-      return users
-          .add({
-            'firstName': "Dana",
-            'lastName': "Default",
-            'email': "test2@gmail.com",
-            'projectId': 124,
-            'dateCreated': '10-03-2021'
-      })
-          .then((value) => print("User Added"))
-          .catchError((error) => print("Failed to add user."));
+    Future<void> signinValidUser(){
+      return auth.signInWithEmailAndPassword(email: "paisleydavis@u.boisestate.edu", password: 'abc123')
+          .catchError((error) => print(error.code));
     }
+
+    Future<void> signinInvalidUser(){
+      return auth.signInWithEmailAndPassword(email: "paisleydavis@u.boisestate", password: 'abc123')
+          .catchError((error) => print(error.code));
+    }
+
+    Future<void> signOut(){
+      return auth.signOut();
+    }
+
+    // Future<void> checkUser() {
+    //   return users.where('email', isEqualTo: 'test@gmail.com').get().then((value) => {for (var element in value.docs) {print(element["firstName"])}  }).catchError((error) => print("Failed to get user."));
+    // }
+    //
+    // Future<void> addUser() {
+    //   return users
+    //       .add({
+    //         'firstName': "Dana",
+    //         'lastName': "Default",
+    //         'email': "test2@gmail.com",
+    //         'projectId': 124,
+    //         'dateCreated': '10-03-2021'
+    //   })
+    //       .then((value) => print("User Added"))
+    //       .catchError((error) => print("Failed to add user."));
+    // }
 
     // scaffold is a layout for the major Material Components
     return MaterialApp(
@@ -100,13 +124,29 @@ class _AppState extends State<App> {
         body: Center(
           child: Column(
             children: [
+              // OutlinedButton(
+              //   onPressed: addUser,
+              //   child: Text('Add User'),
+              // ),
+              // OutlinedButton(
+              //   onPressed: checkUser,
+              //   child: Text('Check User'),
+              // ),
               OutlinedButton(
-                onPressed: addUser,
-                child: Text('Add User'),
+                onPressed: registerUser,
+                child: Text('Register'),
               ),
               OutlinedButton(
-                onPressed: checkUser,
-                child: Text('Check User'),
+                onPressed: signinValidUser,
+                child: Text('Sign In With Valid User'),
+              ),
+              OutlinedButton(
+                onPressed: signinInvalidUser,
+                child: Text('Sign In With Invalid User'),
+              ),
+              OutlinedButton(
+                onPressed: signOut,
+                child: Text('Sign Out'),
               ),
             ],
           ),
