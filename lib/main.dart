@@ -10,12 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(App()
-      // const MaterialApp( // using Material is optional but "good practice"
-      //   title: 'EMA',
-      //   home: AdminHome(),
-      // ),
-      );
+  runApp(App());
 }
 
 class App extends StatefulWidget {
@@ -78,18 +73,18 @@ class _AppState extends State<App> {
     });
 
     Future<void> registerUser(){
-      return auth.createUserWithEmailAndPassword(email: 'paisleydavis@u.boisestate.edu', password: 'abc123')
+      return auth.createUserWithEmailAndPassword(email: 'test@gmail.com', password: 'abc123')
       .then((value) => print("User registered..."))
       .catchError((error) => print(error.code));
     }
 
     Future<void> signinValidUser(){
-      return auth.signInWithEmailAndPassword(email: "paisleydavis@u.boisestate.edu", password: 'abc123')
+      return auth.signInWithEmailAndPassword(email: "badtest@gmail.com", password: 'abc123')
           .catchError((error) => print(error.code));
     }
 
     Future<void> signinInvalidUser(){
-      return auth.signInWithEmailAndPassword(email: "paisleydavis@u.boisestate", password: 'abc123')
+      return auth.signInWithEmailAndPassword(email: "test@gmail.com", password: 'abc123')
           .catchError((error) => print(error.code));
     }
 
