@@ -92,23 +92,6 @@ class _AppState extends State<App> {
       return auth.signOut();
     }
 
-    // Future<void> checkUser() {
-    //   return users.where('email', isEqualTo: 'test@gmail.com').get().then((value) => {for (var element in value.docs) {print(element["firstName"])}  }).catchError((error) => print("Failed to get user."));
-    // }
-    //
-    // Future<void> addUser() {
-    //   return users
-    //       .add({
-    //         'firstName': "Dana",
-    //         'lastName': "Default",
-    //         'email': "test2@gmail.com",
-    //         'projectId': 124,
-    //         'dateCreated': '10-03-2021'
-    //   })
-    //       .then((value) => print("User Added"))
-    //       .catchError((error) => print("Failed to add user."));
-    // }
-
     // scaffold is a layout for the major Material Components
     return MaterialApp(
       home: Scaffold(
