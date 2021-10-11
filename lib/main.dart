@@ -9,6 +9,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  //This needs to happen here, I think since it's a background handler?
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(
     App()
@@ -121,6 +123,31 @@ class _AppState extends State<App> {
     }
   }
 
+  Future<void> onActionSelected(String value) async {
+    switch (value) {
+      case 'subscribe':
+        {
+          print(
+              'Subscribing to test topic: notif_test');
+          await FirebaseMessaging.instance.subscribeToTopic('notif_test');
+          print(
+              'Subscription successful');
+        }
+        break;
+      case 'unsubscribe':
+        {
+          print(
+              'Unsubscibing from test topic: notif_test');
+          await FirebaseMessaging.instance.unsubscribeFromTopic('notif_test');
+          print(
+              'Unsubscription successful');
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   @override
   void initState() {
     initializeFlutterFire();
@@ -134,6 +161,25 @@ class _AppState extends State<App> {
         home: Scaffold(
           appBar: AppBar(
             title: const Text('EMA - Administrator'),
+            //This is just for testing and should be removed once a system is in
+            //place to subscribe devices based on users
+            actions: <Widget>[
+              PopupMenuButton(
+                onSelected: onActionSelected,
+                itemBuilder: (BuildContext context) {
+                  return [
+                    const PopupMenuItem(
+                      value: 'subscribe',
+                      child: Text('Subscribe to topic'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'unsubscribe',
+                      child: Text('Unsubscribe to topic'),
+                    )
+                  ];
+                },
+              ),
+            ],
           ),
           // body is majority of the screen
           body: Center(
