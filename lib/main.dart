@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -123,6 +124,29 @@ class _AppState extends State<App> {
     }
   }
 
+  Future<void> setupInteractedMessage() async {
+    await Firebase.initializeApp();
+    RemoteMessage? openingMessage = await FirebaseMessaging.instance.getInitialMessage();
+
+    if (openingMessage != null) {
+      _handleMessage(openingMessage);
+    }
+
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
+    print("Finished setting up notification tap handler");
+  }
+
+  void _handleMessage(RemoteMessage message) async {
+    print("Handling notification press");
+    if (message.data['url'] != null) {
+      final url = message.data['url'];
+      if (await canLaunch(url)) {
+        await launch(url);
+      }
+      else throw "Could not launch $url";
+    }
+  }
+
   Future<void> onActionSelected(String value) async {
     switch (value) {
       case 'subscribe':
@@ -152,6 +176,7 @@ class _AppState extends State<App> {
   void initState() {
     initializeFlutterFire();
     super.initState();
+    setupInteractedMessage();
   }
 
   @override
