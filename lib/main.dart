@@ -150,30 +150,6 @@ class _AppState extends State<App> {
     }
   }
 
-  Future<void> onActionSelected(String value) async {
-    switch (value) {
-      case 'subscribe':
-        {
-          print(
-              'Subscribing to test topic: notif_test');
-          await FirebaseMessaging.instance.subscribeToTopic('notif_test');
-          print(
-              'Subscription successful');
-        }
-        break;
-      case 'unsubscribe':
-        {
-          print(
-              'Unsubscibing from test topic: notif_test');
-          await FirebaseMessaging.instance.unsubscribeFromTopic('notif_test');
-          print(
-              'Unsubscription successful');
-        }
-        break;
-      default:
-        break;
-    }
-  }
 
   @override
   void initState() {
@@ -209,31 +185,56 @@ class LoginPage extends StatelessWidget {
   LoginPage(
       {required this.usernameController, required this.passwordController});
 
+  Future<void> onActionSelected(String value) async {
+    switch (value) {
+      case 'subscribe':
+        {
+          print(
+              'Subscribing to test topic: notif_test');
+          await FirebaseMessaging.instance.subscribeToTopic('notif_test');
+          print(
+              'Subscription successful');
+        }
+        break;
+      case 'unsubscribe':
+        {
+          print(
+              'Unsubscibing from test topic: notif_test');
+          await FirebaseMessaging.instance.unsubscribeFromTopic('notif_test');
+          print(
+              'Unsubscription successful');
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('EMA'),
+        //This is just for testing and should be removed once a system is in
+        //place to subscribe devices based on users
+        actions: <Widget>[
+          PopupMenuButton(
+            onSelected: onActionSelected,
+            itemBuilder: (BuildContext context) {
+              return [
+                const PopupMenuItem(
+                  value: 'subscribe',
+                  child: Text('Subscribe to topic'),
+                ),
+                const PopupMenuItem(
+                  value: 'unsubscribe',
+                  child: Text('Unsubscribe to topic'),
+                )
+              ];
+            },
+          ),
+        ],
       ),
-      //This is just for testing and should be removed once a system is in
-      //place to subscribe devices based on users
-      actions: <Widget>[
-              PopupMenuButton(
-                onSelected: onActionSelected,
-                itemBuilder: (BuildContext context) {
-                  return [
-                    const PopupMenuItem(
-                      value: 'subscribe',
-                      child: Text('Subscribe to topic'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'unsubscribe',
-                      child: Text('Unsubscribe to topic'),
-                    )
-                  ];
-                },
-              ),
-            ],
       // body is majority of the screen
       body: Center(
         child: Column(
