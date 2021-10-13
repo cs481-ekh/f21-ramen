@@ -15,7 +15,8 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const App());
 
-    // Verify 'Send Notification' button exists
-    expect(find.text('Send Notification'), findsOneWidget);
+    // Verify 'Login' button exists
+    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Sign Up'), findsOneWidget);
   });
 }
