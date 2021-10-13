@@ -11,11 +11,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ema/main.dart';
 
 void main() {
-  // testWidgets('Expected buttons exist', (WidgetTester tester) async {
-  //   // Build our app and trigger a frame.
-  //   await tester.pumpWidget(const App());
-  //
-  //   // Verify buttons exists
-  //   expect(find.text('Sign Out'), findsOneWidget);
-  // });
+  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+    // Build our app and trigger a frame.
+    await tester.pumpWidget(const App());
+
+    // Verify 'Login' button exists
+    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Sign Up'), findsOneWidget);
+  });
 }
