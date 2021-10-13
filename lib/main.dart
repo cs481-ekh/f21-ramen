@@ -5,22 +5,23 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
 
   //This needs to happen here, I think since it's a background handler?
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  runApp(
-    App()
-    // const MaterialApp( // using Material is optional but "good practice"
-    //   title: 'EMA',
-    //   home: AdminHome(),
-    // ),
-  );
+  runApp(App()
+      // const MaterialApp( // using Material is optional but "good practice"
+      //   title: 'EMA',
+      //   home: AdminHome(),
+      // ),
+      );
 }
 
 class App extends StatefulWidget {
@@ -30,9 +31,9 @@ class App extends StatefulWidget {
   _AppState createState() => _AppState();
 
   static FirebaseAnalytics analytics = FirebaseAnalytics();
-  static FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
+  static FirebaseAnalyticsObserver observer =
+      FirebaseAnalyticsObserver(analytics: analytics);
   // static FirebaseMessaging messaging = FirebaseMessaging.instance;
-
 
 }
 
@@ -67,13 +68,12 @@ class _AppState extends State<App> {
       });
     }
 
-    if(_error){
+    if (_error) {
       print("Something went wrong with Firebase...");
-    }
-    else{
+    } else {
       print("success!");
     }
-    if(!_initialized) {
+    if (!_initialized) {
       print("loading...");
     }
 
@@ -93,27 +93,24 @@ class _AppState extends State<App> {
       sound: true,
     );
 
-
-
     print('User granted permission: ${settings.authorizationStatus}');
-    if(settings.authorizationStatus.toString() == "AuthorizationStatus.authorized") {
+    if (settings.authorizationStatus.toString() ==
+        "AuthorizationStatus.authorized") {
       setState(() {
         _messagerInitialized = true;
       });
     }
-    if(!_messagerInitialized){
+    if (!_messagerInitialized) {
       print("Permission for messages not given!");
     }
 
-    if(_messagerInitialized = true) {
+    if (_messagerInitialized = true) {
       //This should connect to the foreground message handler
       FirebaseMessaging.onMessage.listen(handleForegroundMessage);
 
       // Trying to do this right here causes an error for some reason??
       // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     }
-
-
   }
 
   //This should be called if a message is received while the app is open
@@ -129,7 +126,8 @@ class _AppState extends State<App> {
 
   Future<void> setupInteractedMessage() async {
     await Firebase.initializeApp();
-    RemoteMessage? openingMessage = await FirebaseMessaging.instance.getInitialMessage();
+    RemoteMessage? openingMessage =
+        await FirebaseMessaging.instance.getInitialMessage();
 
     if (openingMessage != null) {
       _handleMessage(openingMessage);
@@ -145,11 +143,10 @@ class _AppState extends State<App> {
       final url = message.data['url'];
       if (await canLaunch(url)) {
         await launch(url);
-      }
-      else throw "Could not launch $url";
+      } else
+        throw "Could not launch $url";
     }
   }
-
 
   @override
   void initState() {
@@ -189,20 +186,16 @@ class LoginPage extends StatelessWidget {
     switch (value) {
       case 'subscribe':
         {
-          print(
-              'Subscribing to test topic: notif_test');
+          print('Subscribing to test topic: notif_test');
           await FirebaseMessaging.instance.subscribeToTopic('notif_test');
-          print(
-              'Subscription successful');
+          print('Subscription successful');
         }
         break;
       case 'unsubscribe':
         {
-          print(
-              'Unsubscibing from test topic: notif_test');
+          print('Unsubscibing from test topic: notif_test');
           await FirebaseMessaging.instance.unsubscribeFromTopic('notif_test');
-          print(
-              'Unsubscription successful');
+          print('Unsubscription successful');
         }
         break;
       default:
@@ -212,6 +205,35 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    auth.userChanges().listen((User? user) {
+      if (user == null) {
+        print("Signed OUT");
+      } else {
+        print('Signed IN');
+      }
+    });
+
+    Future<bool> registerUser() {
+      return auth
+          .createUserWithEmailAndPassword(
+              email: usernameController.text, password: passwordController.text)
+          .then((value) => true)
+          .catchError((error) => false);
+    }
+
+    Future<bool> signinUser() {
+      return auth
+          .signInWithEmailAndPassword(
+              email: usernameController.text, password: passwordController.text)
+          .then((value) => true)
+          .catchError((error) => false);
+    }
+
+    Future<void> signOut() {
+      return auth.signOut();
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('EMA'),
@@ -271,11 +293,11 @@ class LoginPage extends StatelessWidget {
                       primary: Colors.white,
                       textStyle: const TextStyle(fontSize: 20),
                       backgroundColor: Colors.blue),
-                  onPressed: () {
+                  onPressed: () async {
                     // TODO: Check for username and password in firebase
                     // If username and password don't exist, send alert and
                     // don't navigate to user page
-                    bool userExists = false;
+                    bool userExists = await signinUser();
                     // TODO: Set isAdmin if firebase username and password matches
                     // admin username and password
                     bool isAdmin = true;
@@ -320,7 +342,7 @@ class LoginPage extends StatelessWidget {
                       primary: Colors.white,
                       textStyle: const TextStyle(fontSize: 20),
                       backgroundColor: Colors.blue),
-                  onPressed: () {
+                  onPressed: () async {
                     bool isEmpty = usernameController.text == '' &&
                         passwordController.text == '';
                     RegExp exp = RegExp(r"\w+@.*\.(edu|com)");
@@ -351,10 +373,33 @@ class LoginPage extends StatelessWidget {
                               );
                             })
                         : validEmail
-                            ? Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => UserPage()))
+                            ? await registerUser()
+                                ? Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => UserPage()))
+                                : showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text("Unable to register user."),
+                                        content: SingleChildScrollView(
+                                          child: ListBody(
+                                            children: const <Widget>[
+                                              Text("Please try again."),
+                                            ],
+                                          ),
+                                        ),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            child: const Text('OK'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    })
                             : showDialog(
                                 context: context,
                                 builder: (BuildContext context) {
@@ -432,22 +477,49 @@ class UserPage extends StatelessWidget {
 class AdminPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('EMA - Admin'),
-      ),
-      // body is majority of the screen
-      body: Center(
-        child: Column(
-          children: [
-            OutlinedButton(
-              onPressed: () {
-                print("button pressed");
-              },
-              child: Text('Send Notification'),
-            ),
-          ],
+    FirebaseAuth auth = FirebaseAuth.instance;
+    auth.userChanges().listen((User? user) {
+      if (user == null) {
+        print("Signed OUT");
+      } else {
+        print('Signed IN');
+      }
+    });
+
+    Future<void> signOut() {
+      return auth.signOut();
+    }
+
+    // scaffold is a layout for the major Material Components
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('EMA - Administrator'),
         ),
+        // body is majority of the screen
+        body: Center(
+          child: Column(
+            children: [
+              // OutlinedButton(
+              //   onPressed: addUser,
+              //   child: Text('Add User'),
+              // ),
+              // OutlinedButton(
+              //   onPressed: checkUser,
+              //   child: Text('Check User'),
+              // ),
+              OutlinedButton(
+                onPressed: signOut,
+                child: Text('Sign Out'),
+              ),
+            ],
+          ),
+        ),
+        // floatingActionButton: const FloatingActionButton(
+        //     tooltip: 'Send Reminder',
+        //     child: Icon(Icons.add),
+        //     onPressed: null,
+        // ),
       ),
     );
   }
