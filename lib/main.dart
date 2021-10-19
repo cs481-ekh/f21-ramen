@@ -46,6 +46,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   print("Handling a background message: ${message.messageId}");
 
+  _storeMessage(message);
+}
+
+void _storeMessage(RemoteMessage message) async {
   //To make sure the data from a firebase message is saved, the notification's
   //info is saved to persistent storage
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -57,14 +61,23 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   final body = message.notification?.body ?? "";
   final url = message.data['url'] ?? "";
   final receivedAt = DateTime.now().toString();
-  final newNotif = 
+
+  //["id":idnumber,"received":time,"title":"Test","body":"This is a test notification","url":"test.com",]
+  final newNotif =
       '{"id":"${message.messageId}",'
       '"received":"${receivedAt}",'
       '"title":"${title}",'
       '"body":"${body}",'
       '"url":"${url}"}';
   notifs.insert(0, newNotif);
+
+  //Limit list to 5 most recent notifications
+  if(notifs.length > 5) {
+    notifs.removeRange(5, notifs.length - 1);
+  }
+
   prefs.setStringList("missedNotifs", notifs);
+  print("Message handled and saved to storage!");
 }
 
 class _AppState extends State<App> {
@@ -144,6 +157,8 @@ class _AppState extends State<App> {
     if (message.notification != null) {
       print('Message also contained a notification: ${message.notification}');
     }
+
+    _storeMessage(message);
   }
 
   Future<void> setupInteractedMessage() async {
