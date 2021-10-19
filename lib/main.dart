@@ -58,11 +58,11 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   final url = message.data['url'] ?? "";
   final receivedAt = DateTime.now().toString();
   final newNotif = 
-      '["id":"${message.messageId}",'
+      '{"id":"${message.messageId}",'
       '"received":"${receivedAt}",'
       '"title":"${title}",'
       '"body":"${body}",'
-      '"url":"${url}"]';
+      '"url":"${url}"}';
   notifs.insert(0, newNotif);
   prefs.setStringList("missedNotifs", notifs);
 }
@@ -173,7 +173,7 @@ class _AppState extends State<App> {
         final temp = jsonDecode(n);
         //Checks the message id, filters out the handled message to remove from storage
         if (temp['id'] == message.messageId) {
-          newNotifList.add(temp.toString());
+          newNotifList.add(n);
           messageCheck = false;
         }
       } else {
