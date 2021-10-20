@@ -11,6 +11,7 @@ import 'package:flutter/widgets.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,7 @@ class App extends StatefulWidget {
   static FirebaseAnalytics analytics = FirebaseAnalytics();
   static FirebaseAnalyticsObserver observer =
       FirebaseAnalyticsObserver(analytics: analytics);
+  static FirebaseFirestore firestore = FirebaseFirestore.instance;
   // static FirebaseMessaging messaging = FirebaseMessaging.instance;
 
 }
@@ -86,6 +88,7 @@ class _AppState extends State<App> {
   bool _error = false;
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
+  final projectIdController = TextEditingController();
   bool _messagerInitialized = false;
 
   // Define an async function to initialize FlutterFire
@@ -220,6 +223,7 @@ class _AppState extends State<App> {
     // Clean up the controller when the widget is disposed.
     usernameController.dispose();
     passwordController.dispose();
+    projectIdController.dispose();
     super.dispose();
   }
 
@@ -230,7 +234,8 @@ class _AppState extends State<App> {
     return MaterialApp(
       home: LoginPage(
           usernameController: usernameController,
-          passwordController: passwordController),
+          passwordController: passwordController,
+          projectIdController: projectIdController),
     );
   }
 }
@@ -238,9 +243,10 @@ class _AppState extends State<App> {
 class LoginPage extends StatelessWidget {
   final TextEditingController usernameController;
   final TextEditingController passwordController;
+  final TextEditingController projectIdController;
 
   LoginPage(
-      {required this.usernameController, required this.passwordController});
+      {required this.usernameController, required this.passwordController, required this.projectIdController});
 
   Future<void> onActionSelected(String value) async {
     switch (value) {
@@ -263,18 +269,40 @@ class LoginPage extends StatelessWidget {
     }
   }
 
+  Future<bool> subscribeToProjectTopic(String projectId){
+      return FirebaseMessaging.instance.subscribeToTopic(projectId)
+          .then((value) => true)
+          .catchError((error) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     FirebaseAuth auth = FirebaseAuth.instance;
     auth.userChanges().listen((User? user) {
-      if (user == null) {
-        print("Signed OUT");
+      if (user == null) { // TODO: if user is not logged in, navigate to login/register page
+        print('Signed OUT');
       } else {
         print('Signed IN');
       }
     });
 
+    // get reference for cloud database
+    CollectionReference users = FirebaseFirestore.instance.collection('users');
+
+    Future<bool> addUserToDatabase() {
+      return users
+          .doc(usernameController.text)
+          .set({
+        'email': usernameController.text,
+        'projectId': projectIdController.text,
+        'dateCreated': DateTime.now()
+      })
+          .then((value) => true)
+          .catchError((error) => false);
+    }
+
     Future<bool> registerUser() {
+
       return auth
           .createUserWithEmailAndPassword(
               email: usernameController.text, password: passwordController.text)
@@ -282,12 +310,61 @@ class LoginPage extends StatelessWidget {
           .catchError((error) => false);
     }
 
-    Future<bool> signinUser() {
-      return auth
-          .signInWithEmailAndPassword(
-              email: usernameController.text, password: passwordController.text)
-          .then((value) => true)
-          .catchError((error) => false);
+    Future<bool> addNewUser() async {
+      //TODO: only add to database if authentication works!
+        // add user to database to save projectId and other data
+        bool databaseSuccess = await addUserToDatabase();
+
+        // register user with authentication
+        bool registerSuccess = await registerUser();
+
+        // subscribe to provided project id list
+        bool subscribeSuccess = await subscribeToProjectTopic(projectIdController.text);
+
+        //TODO: add better error handling to be displayed to user
+
+        if(databaseSuccess && registerSuccess && subscribeSuccess){
+          return true;
+        }
+
+        return false;
+    }
+
+    Future<bool> signinUser() async {
+
+      // sign-in using auth
+      await auth.signInWithEmailAndPassword(
+          email: usernameController.text, password: passwordController.text);
+
+      // var document = await Firestore.instance.collection('COLLECTION_NAME').document('TESTID1');
+      // document.get() => then(function(document) {
+      // print(document("name"));
+      // });
+      // var document = await users.document(usernameController.text);
+      // document.get() => then(function(document) {
+      // print(document("name"));
+      // });
+
+      // get project ID for user
+      var projectId;
+      await users.where(
+          FieldPath.documentId,
+          isEqualTo: usernameController.text
+      ).get().then((value) {
+        if (value.docs.isNotEmpty) {
+          // QueryDocumentSnapshot<Object?> documentData = value.docs.elementAt(0); //if it is a single document
+          projectId = value.docs.elementAt(0)["projectId"];
+        }
+      }).catchError((e) => print("error fetching data: $e"));
+
+      bool subscribeSuccess = await subscribeToProjectTopic(projectIdController.text);
+
+      if(subscribeSuccess){
+        return true;
+      }
+
+      return false;
+
     }
 
     Future<void> signOut() {
@@ -343,6 +420,15 @@ class LoginPage extends StatelessWidget {
                     labelText: 'Password',
                   ),
                 )),
+            Padding(
+                padding: EdgeInsets.all(20.0),
+                child: TextField(
+                  controller: projectIdController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Project ID',
+                  ),
+                )),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Padding(
                 padding: EdgeInsets.all(20.0),
@@ -354,9 +440,6 @@ class LoginPage extends StatelessWidget {
                       textStyle: const TextStyle(fontSize: 20),
                       backgroundColor: Colors.blue),
                   onPressed: () async {
-                    // TODO: Check for username and password in firebase
-                    // If username and password don't exist, send alert and
-                    // don't navigate to user page
                     bool userExists = await signinUser();
                     // TODO: Set isAdmin if firebase username and password matches
                     // admin username and password
@@ -408,7 +491,6 @@ class LoginPage extends StatelessWidget {
                     RegExp exp = RegExp(r"\w+@.*\.(edu|com)");
                     bool validEmail = exp.hasMatch(usernameController.text);
 
-                    //TODO: If fields are not empty, create a new user in firebase
                     isEmpty
                         ? showDialog(
                             context: context,
@@ -433,7 +515,7 @@ class LoginPage extends StatelessWidget {
                               );
                             })
                         : validEmail
-                            ? await registerUser()
+                            ? await addNewUser()
                                 ? Navigator.push(
                                     context,
                                     MaterialPageRoute(
