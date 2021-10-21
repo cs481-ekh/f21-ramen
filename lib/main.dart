@@ -330,40 +330,52 @@ class LoginPage extends StatelessWidget {
         return false;
     }
 
-    Future<bool> signinUser() async {
+
+    Future<dynamic> getUsersProjectId(String username) async {
+
+      dynamic data;
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(username)
+          .get()
+          .then((DocumentSnapshot documentSnapshot) {
+        if (documentSnapshot.exists) {
+          data = documentSnapshot.get("projectId");
+        } else {
+          data = null;
+        }
+      });
+
+      return data;
+    }
+
+    Future<String> signinUser() async {
+
+      String errorMessage = "";
 
       // sign-in using auth
-      await auth.signInWithEmailAndPassword(
-          email: usernameController.text, password: passwordController.text);
-
-      // var document = await Firestore.instance.collection('COLLECTION_NAME').document('TESTID1');
-      // document.get() => then(function(document) {
-      // print(document("name"));
-      // });
-      // var document = await users.document(usernameController.text);
-      // document.get() => then(function(document) {
-      // print(document("name"));
-      // });
-
-      // get project ID for user
-      var projectId;
-      await users.where(
-          FieldPath.documentId,
-          isEqualTo: usernameController.text
-      ).get().then((value) {
-        if (value.docs.isNotEmpty) {
-          // QueryDocumentSnapshot<Object?> documentData = value.docs.elementAt(0); //if it is a single document
-          projectId = value.docs.elementAt(0)["projectId"];
-        }
-      }).catchError((e) => print("error fetching data: $e"));
-
-      bool subscribeSuccess = await subscribeToProjectTopic(projectIdController.text);
-
-      if(subscribeSuccess){
-        return true;
+      try {
+        await auth.signInWithEmailAndPassword(email: usernameController.text, password: passwordController.text);
+      } catch (error) {
+          errorMessage = error.toString();
+          return errorMessage;
       }
 
-      return false;
+      // get user data from firebase data for project id
+      dynamic userProjectId = await getUsersProjectId(usernameController.text);
+      if(userProjectId == null){
+        errorMessage = "Unable to find user in database";
+        return errorMessage;
+      }
+      //subscribe user to project
+      bool subscribeCheck = await subscribeToProjectTopic(userProjectId);
+      if(!subscribeCheck){
+        errorMessage = "Could not subscribe user to project using ID in database.";
+        return errorMessage;
+      }
+
+      return "";
 
     }
 
@@ -399,52 +411,52 @@ class LoginPage extends StatelessWidget {
         child: Column(
           children: [
             Padding(
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                   top: 80.0, bottom: 20.0, left: 20.0, right: 20.0),
               child: TextField(
                 controller: usernameController,
                 obscureText: false,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Email',
                 ),
               ),
             ),
             Padding(
-                padding: EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20.0),
                 child: TextField(
                   controller: passwordController,
                   obscureText: true,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Password',
                   ),
                 )),
             Padding(
-                padding: EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20.0),
                 child: TextField(
                   controller: projectIdController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Project ID',
                   ),
                 )),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Padding(
-                padding: EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20.0),
                 child: TextButton(
                   style: TextButton.styleFrom(
-                      padding: EdgeInsets.only(
+                      padding: const EdgeInsets.only(
                           top: 20.0, bottom: 20.0, left: 30.0, right: 30.0),
                       primary: Colors.white,
                       textStyle: const TextStyle(fontSize: 20),
                       backgroundColor: Colors.blue),
                   onPressed: () async {
-                    bool userExists = await signinUser();
+                    String userExists = await signinUser();
                     // TODO: Set isAdmin if firebase username and password matches
                     // admin username and password
                     bool isAdmin = true;
-                    userExists
+                    userExists == "" // navigate to appropriate user page
                         ? Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -454,12 +466,11 @@ class LoginPage extends StatelessWidget {
                             context: context,
                             builder: (BuildContext context) {
                               return AlertDialog(
-                                title: const Text("Invalid Credentials"),
+                                title: const Text("Error"),
                                 content: SingleChildScrollView(
                                   child: ListBody(
-                                    children: const <Widget>[
-                                      Text(
-                                          "We couldn't find your account. Please enter correct credentials or sign up for an account."),
+                                    children: <Widget>[
+                                      Text(userExists),
                                     ],
                                   ),
                                 ),
