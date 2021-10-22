@@ -501,7 +501,7 @@ class LoginPage extends StatelessWidget {
                     String userExists = await signinUser();
                     // TODO: Set isAdmin if firebase username and password matches
                     // admin username and password
-                    bool isAdmin = true;
+                    bool isAdmin = false;
                     userExists == "" // navigate to appropriate user page
                         ? Navigator.push(
                             context,
@@ -637,7 +637,43 @@ class LoginPage extends StatelessWidget {
   }
 }
 
-class UserPage extends StatelessWidget {
+class UserPage extends StatefulWidget {
+  const UserPage({Key? key}) : super(key: key);
+
+  @override
+  _UserPageState createState() => _UserPageState();
+}
+
+class _UserPageState extends State<UserPage> {
+
+  late SharedPreferences _SharedPrefs;
+  List<String> MissedNotifs = [];
+  int notifAmount = 0;
+
+  void initializeSharedPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _SharedPrefs = prefs;
+    });
+    updateMissedNotifs();
+  }
+
+  void updateMissedNotifs() {
+    final notifs = _SharedPrefs.getStringList("missedNotifs") ?? [];
+    setState(() {
+      MissedNotifs = notifs;
+    });
+    setState(() {
+      notifAmount = notifs.length;
+    });
+  }
+
+  @override
+  void initState() {
+    initializeSharedPrefs();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -655,6 +691,22 @@ class UserPage extends StatelessWidget {
                         fontSize: 20.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.blue))),
+            Padding(
+              padding: EdgeInsets.all(20.0),
+              child: ListView.builder(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: notifAmount,
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Container(
+                      height: 50,
+                      color: Colors.lightBlueAccent,
+                      child: Center(child: Text(MissedNotifs[index])),
+                    );
+                  }
+              )
+            ),
             Padding(
                 padding: EdgeInsets.all(20.0),
                 child: TextButton(
