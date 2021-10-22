@@ -269,10 +269,42 @@ class LoginPage extends StatelessWidget {
     }
   }
 
+
+  CollectionReference projects = FirebaseFirestore.instance.collection('projects');
+
+  Future<String> addSubscriberToDatabase(String projectId, String description){
+    return projects
+        .doc(projectId)
+        .set({
+      'projectId': projectId,
+      'description': description,
+      'dateCreated': DateTime.now()
+    })
+    .then((value) => "")
+    .catchError((error) => error.toString());
+  }
+
   Future<bool> subscribeToProjectTopic(String projectId){
       return FirebaseMessaging.instance.subscribeToTopic(projectId)
           .then((value) => true)
           .catchError((error) => false);
+  }
+
+  Future<bool> checkProjectIdExists(String projectId) async {
+
+    bool check = await FirebaseFirestore.instance
+        .collection('projects')
+        .doc(projectId)
+        .get()
+        .then((DocumentSnapshot documentSnapshot) {
+      if (documentSnapshot.exists) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    return check;
   }
 
   @override
@@ -315,6 +347,13 @@ class LoginPage extends StatelessWidget {
 
         String errorMessage = "";
 
+        // subscribe to provided project id list
+        // error checking doesn't matter here lmaaaoooo
+        if(!(await checkProjectIdExists(projectIdController.text))){
+          errorMessage = "Project ID does not exist.";
+          return errorMessage;
+        }
+
         // register user with authentication
         String regUser = await registerUser();
         if(regUser != ""){
@@ -324,16 +363,10 @@ class LoginPage extends StatelessWidget {
 
         // add user to database to save projectId and other data
         // but only if auth worked
+        // TODO: do we need to handle if auth succeeded but db add failed delete account?
         String addDb = await addUserToDatabase();
         if(addDb != ""){
           errorMessage = "Could not add user to database: $addDb";
-          return errorMessage;
-        }
-
-        // subscribe to provided project id list
-        // error checking doesn't matter here lmaaaoooo
-        if(!(await subscribeToProjectTopic(projectIdController.text))){
-          errorMessage = "Could not subscribe to project list using provided ID.";
           return errorMessage;
         }
 
@@ -383,6 +416,9 @@ class LoginPage extends StatelessWidget {
       if(!subscribeCheck){
         errorMessage = "Could not subscribe user to project using ID in database.";
         return errorMessage;
+      }
+      else{
+        subscribeToProjectTopic(projectIdController.text);
       }
 
       return "";
