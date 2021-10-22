@@ -12,6 +12,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -658,19 +659,95 @@ class _UserPageState extends State<UserPage> {
     updateMissedNotifs();
   }
 
+  void initializeMessageHandler() async {
+    FirebaseMessaging.onMessage.listen(handleForegroundNotif);
+  }
+
   void updateMissedNotifs() {
-    final notifs = _SharedPrefs.getStringList("missedNotifs") ?? [];
     setState(() {
-      MissedNotifs = notifs;
+      MissedNotifs = _SharedPrefs.getStringList("missedNotifs") ?? [];
     });
     setState(() {
-      notifAmount = notifs.length;
+      notifAmount = MissedNotifs.length;
     });
+    print("Updated notification list!");
+  }
+
+  //This function defines the widget built into the ListView
+  Widget listViewHelper(BuildContext context, int index) {
+
+    final notifJSON = MissedNotifs[index];
+    final nObject = jsonDecode(notifJSON);
+
+    //["id":idnumber,"received":time,"title":"Test","body":"This is a test notification","url":"test.com",]
+    final dateReceived = DateTime.parse(nObject['received']);
+    final notifInfo = '${nObject['title']} : ${nObject['body']}';
+    final url = nObject['url'];
+    final dateString = DateFormat('yyyy-MM-dd – h:mm a').format(dateReceived);
+
+    //In order to properly access the url object, this needs to be initialized here unfortunately
+    //If you can find another way to do it let me know
+    void openNotif() async {
+
+      var newNotifList = <String>[];
+      bool messageCheck = true;
+
+      for(final n in MissedNotifs) {
+        if(messageCheck) {
+          final temp = jsonDecode(n);
+          //Checks the message id, filters out the handled message to remove from storage
+          if (temp['id'] == nObject['id']) {
+            messageCheck = false;
+          } else {
+            newNotifList.add(n);
+          }
+        } else {
+          //Once we've found the matching message doing unnecessary json decoding is slow
+          newNotifList.add(n);
+        }
+      }
+
+      _SharedPrefs.setStringList("missedNotifs", newNotifList);
+
+      updateMissedNotifs();
+
+      if(url != null) {
+        if (await canLaunch(url)) {
+          await launch(url);
+        } else
+          throw "Could not launch $url";
+      }
+    }
+
+    return Card(
+      child: ListTile(
+        title:Text(notifInfo),
+        subtitle: Text(dateString),
+        onTap: openNotif,
+      )
+    );
+  }
+
+  // void openNotif(String url) {
+  //
+  // }
+
+  void handleForegroundNotif(RemoteMessage message) {
+    print('Got a notification while in the foreground!');
+    print('Message data: ${message.data}');
+
+    if (message.notification != null) {
+      print('Message also contained a notification: ${message.notification}');
+    }
+
+    _storeMessage(message);
+    updateMissedNotifs();
   }
 
   @override
   void initState() {
     initializeSharedPrefs();
+    initializeMessageHandler();
     super.initState();
   }
 
@@ -698,13 +775,7 @@ class _UserPageState extends State<UserPage> {
                   itemCount: notifAmount,
                   scrollDirection: Axis.vertical,
                   shrinkWrap: true,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Container(
-                      height: 50,
-                      color: Colors.lightBlueAccent,
-                      child: Center(child: Text(MissedNotifs[index])),
-                    );
-                  }
+                  itemBuilder: listViewHelper
               )
             ),
             Padding(
