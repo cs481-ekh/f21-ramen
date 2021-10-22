@@ -289,7 +289,8 @@ class LoginPage extends StatelessWidget {
     // get reference for cloud database
     CollectionReference users = FirebaseFirestore.instance.collection('users');
 
-    Future<bool> addUserToDatabase() {
+    Future<String> addUserToDatabase() async {
+
       return users
           .doc(usernameController.text)
           .set({
@@ -297,37 +298,46 @@ class LoginPage extends StatelessWidget {
         'projectId': projectIdController.text,
         'dateCreated': DateTime.now()
       })
-          .then((value) => true)
-          .catchError((error) => false);
+          .then((value) => "")
+          .catchError((error) => error.toString());
     }
 
-    Future<bool> registerUser() {
+    Future<String> registerUser() {
 
       return auth
           .createUserWithEmailAndPassword(
               email: usernameController.text, password: passwordController.text)
-          .then((value) => true)
-          .catchError((error) => false);
+          .then((value) => "")
+          .catchError((error) => error.toString());
     }
 
-    Future<bool> addNewUser() async {
-      //TODO: only add to database if authentication works!
-        // add user to database to save projectId and other data
-        bool databaseSuccess = await addUserToDatabase();
+    Future<String> addNewUser() async {
+
+        String errorMessage = "";
 
         // register user with authentication
-        bool registerSuccess = await registerUser();
-
-        // subscribe to provided project id list
-        bool subscribeSuccess = await subscribeToProjectTopic(projectIdController.text);
-
-        //TODO: add better error handling to be displayed to user
-
-        if(databaseSuccess && registerSuccess && subscribeSuccess){
-          return true;
+        String regUser = await registerUser();
+        if(regUser != ""){
+            errorMessage = "Could not register new user: $regUser";
+            return errorMessage;
         }
 
-        return false;
+        // add user to database to save projectId and other data
+        // but only if auth worked
+        String addDb = await addUserToDatabase();
+        if(addDb != ""){
+          errorMessage = "Could not add user to database: $addDb";
+          return errorMessage;
+        }
+
+        // subscribe to provided project id list
+        // error checking doesn't matter here lmaaaoooo
+        if(!(await subscribeToProjectTopic(projectIdController.text))){
+          errorMessage = "Could not subscribe to project list using provided ID.";
+          return errorMessage;
+        }
+
+        return errorMessage;
     }
 
 
@@ -501,6 +511,10 @@ class LoginPage extends StatelessWidget {
                         passwordController.text == '';
                     RegExp exp = RegExp(r"\w+@.*\.(edu|com)");
                     bool validEmail = exp.hasMatch(usernameController.text);
+                    String error = "";
+                    if(validEmail){
+                      error = await addNewUser();
+                    }
 
                     isEmpty
                         ? showDialog(
@@ -526,7 +540,7 @@ class LoginPage extends StatelessWidget {
                               );
                             })
                         : validEmail
-                            ? await addNewUser()
+                            ? error == ""
                                 ? Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -538,8 +552,8 @@ class LoginPage extends StatelessWidget {
                                         title: const Text("Unable to register user."),
                                         content: SingleChildScrollView(
                                           child: ListBody(
-                                            children: const <Widget>[
-                                              Text("Please try again."),
+                                            children: <Widget>[
+                                              Text(error),
                                             ],
                                           ),
                                         ),
