@@ -52,7 +52,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   _storeMessage(message);
 }
 
-void _storeMessage(RemoteMessage message) async {
+Future<void> _storeMessage(RemoteMessage message) async {
   //To make sure the data from a firebase message is saved, the notification's
   //info is saved to persistent storage
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -76,10 +76,10 @@ void _storeMessage(RemoteMessage message) async {
 
   //Limit list to 5 most recent notifications
   if(notifs.length > 5) {
-    notifs.removeRange(5, notifs.length - 1);
+    notifs.removeRange(4, notifs.length - 1);
   }
 
-  prefs.setStringList("missedNotifs", notifs);
+  await prefs.setStringList("missedNotifs", notifs);
   print("Message handled and saved to storage!");
 }
 
@@ -145,7 +145,7 @@ class _AppState extends State<App> {
 
     if (_messagerInitialized = true) {
       //This should connect to the foreground message handler
-      FirebaseMessaging.onMessage.listen(handleForegroundMessage);
+      //FirebaseMessaging.onMessage.listen(handleForegroundMessage);
 
       // Trying to do this right here causes an error for some reason??
       // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -457,38 +457,49 @@ class LoginPage extends StatelessWidget {
       body: Center(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(
-                  top: 80.0, bottom: 20.0, left: 20.0, right: 20.0),
-              child: TextField(
-                controller: usernameController,
-                obscureText: false,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Email',
+            Flexible(
+              flex: 3,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                    top: 20.0, bottom: 20.0, left: 20.0, right: 20.0),
+                child: TextField(
+                  controller: usernameController,
+                  obscureText: false,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Email',
+                  ),
                 ),
               ),
             ),
-            Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Password',
-                  ),
-                )),
-            Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: TextField(
-                  controller: projectIdController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Project ID',
-                  ),
-                )),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Flexible(
+              flex: 3,
+              child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Password',
+                    ),
+                  )),
+            ),
+            Flexible(
+              flex: 3,
+              child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: TextField(
+                    controller: projectIdController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Project ID',
+                    ),
+                  )),
+            ),
+            Flexible(
+                flex: 3,
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: TextButton(
@@ -630,7 +641,7 @@ class LoginPage extends StatelessWidget {
                   child: const Text('Sign Up'),
                 ),
               ),
-            ]),
+            ])),
           ],
         ),
       ),
@@ -686,6 +697,7 @@ class _UserPageState extends State<UserPage> {
     final dateString = DateFormat('yyyy-MM-dd – h:mm a').format(dateReceived);
 
     //In order to properly access the url object, this needs to be initialized here unfortunately
+    //Against everything I understand about Dart, it works so I'm not too worried
     //If you can find another way to do it let me know
     void openNotif() async {
 
@@ -719,6 +731,7 @@ class _UserPageState extends State<UserPage> {
       }
     }
 
+    //This part returns the actual widget, along with a pointer to the tap function
     return Card(
       child: ListTile(
         title:Text(notifInfo),
@@ -732,7 +745,7 @@ class _UserPageState extends State<UserPage> {
   //
   // }
 
-  void handleForegroundNotif(RemoteMessage message) {
+  void handleForegroundNotif(RemoteMessage message) async {
     print('Got a notification while in the foreground!');
     print('Message data: ${message.data}');
 
@@ -740,7 +753,7 @@ class _UserPageState extends State<UserPage> {
       print('Message also contained a notification: ${message.notification}');
     }
 
-    _storeMessage(message);
+    await _storeMessage(message);
     updateMissedNotifs();
   }
 
@@ -762,22 +775,22 @@ class _UserPageState extends State<UserPage> {
         child: Column(
           children: [
             Padding(
-                padding: EdgeInsets.all(20.0),
+                padding: EdgeInsets.all(10.0),
                 child: Text('Notifications',
                     style: TextStyle(
                         fontSize: 20.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.blue))),
-            Padding(
-              padding: EdgeInsets.all(20.0),
-              child: ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: notifAmount,
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  itemBuilder: listViewHelper
-              )
-            ),
+            Flexible(
+                flex: 5,
+                child: Padding(
+                    padding: EdgeInsets.all(5.0),
+                    child: ListView.builder(
+                        padding: const EdgeInsets.all(5),
+                        itemCount: notifAmount,
+                        scrollDirection: Axis.vertical,
+                        shrinkWrap: true,
+                        itemBuilder: listViewHelper))),
             Padding(
                 padding: EdgeInsets.all(20.0),
                 child: TextButton(
@@ -787,9 +800,11 @@ class _UserPageState extends State<UserPage> {
                       textStyle: const TextStyle(fontSize: 20),
                       backgroundColor: Colors.blue),
                   onPressed: () {
-                    // Remove all notifications
-                    // Probably can slide or tap to get rid of one notification
-                    // Also chloe didn't know what the user UI should really look like
+                    _SharedPrefs.setStringList("missedNotifs", []);
+                    setState(() {
+                      MissedNotifs = [];
+                      notifAmount = 0;
+                    });
                   },
                   child: const Text('Dismiss All'),
                 )),
