@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 
@@ -705,9 +706,23 @@ class AdminPage extends StatelessWidget {
       return auth.signOut();
     }
 
+    List<ListItem> list = [];
+    List<Participant> participants = [];
+    List<Survey> surveys = [];
+
+    for (var i = 0; i < 10; i++) {
+      surveys.add(Survey('id', DateTime.now(), true));
+    }
+
+    for(var i = 0; i < 10; i++) {
+      participants.add(Participant("email", i % 2 == 0, 10, surveys));
+    }
+    for (var i = 0; i < 10; i++) {
+      list.add(ListItem('id', 'name', participants));
+    }
+
     // scaffold is a layout for the major Material Components
-    return MaterialApp(
-      home: DefaultTabController(
+    return DefaultTabController(
         length: 2,
         child: Scaffold(
         appBar: AppBar(
@@ -723,10 +738,9 @@ class AdminPage extends StatelessWidget {
         body: TabBarView(
     children: [
       AdminHomePage(adminProjectIdController: adminProjectIdController),
-      AdminProjectPage(),
+      AdminProjectPage(items: list),
       ]
       ),
-    )
     )
     );
   }
@@ -763,10 +777,7 @@ class AdminHomePageState extends State<AdminHomePage> {
     }
 
     // scaffold is a layout for the major Material Components
-    return MaterialApp(
-        home: DefaultTabController(
-          length: 2,
-          child: Scaffold(
+    return Scaffold(
             // body is majority of the screen
             body: Center(
               child: Column(
@@ -837,34 +848,56 @@ class AdminHomePageState extends State<AdminHomePage> {
             //     child: Icon(Icons.add),
             //     onPressed: null,
             // ),
-          ),
-        )
     );
   }
 }
 
 class AdminProjectPage extends StatelessWidget {
+  final List<ListItem> items;
 
-  const AdminProjectPage({Key? key}) : super(key: key);
-
+  const AdminProjectPage({Key? key, required this.items}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
 
     // scaffold is a layout for the major Material Components
-    return MaterialApp(
-        home: DefaultTabController(
-          length: 2,
-          child: Scaffold(
+    return Scaffold(
             // body is majority of the screen
-            body: Center(
-              child: Column(
-                children: const [
-                  Padding(
-                    padding: EdgeInsets.only(
-                        top: 80.0, bottom: 20.0, left: 20.0, right: 20.0),
-                    child: Text('Projects'),
+            body: Padding(padding: EdgeInsets.only(top: 30.0), child: ListView.builder(
+              itemCount : 10,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => AdminParticipantsPage(participants: items[index].participants)));
+                  },
+                  child: Container(
+                    height: 45.0,
+                    decoration: const BoxDecoration(),
+                    child: Column(
+                      children: <Widget>[
+                        Container(padding: EdgeInsets.only(left: 30.0, right: 30.0),
+                        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Container(child: Text(items[index].projectId,
+                          textAlign: TextAlign.left,
+                          maxLines: 1,
+                              ),
+                    decoration: const BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(10.0), topRight: Radius.circular(10.0))
+                            ),
+                          ),
+                          Container(child: Text(items[index].projectName,
+                            textAlign: TextAlign.right,
+                            maxLines: 1,
+                          ),
+                            decoration: const BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(10.0), topRight: Radius.circular(10.0))
+                            ),
+                          )]),),
+                      ],
+                    ),
                   ),
+                );
+              }
+            ),
                   // OutlinedButton(
                   //   onPressed: addUser,
                   //   child: Text('Add User'),
@@ -873,16 +906,194 @@ class AdminProjectPage extends StatelessWidget {
                   //   onPressed: checkUser,
                   //   child: Text('Check User'),
                   // ),
-                ],
+              ), bottomSheet: Container(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [TextButton(onPressed: () {
+                Navigator.pop(context); },
+                child: const Text('Logout', textAlign: TextAlign.center,))],)),);
+            // floatingActionButton: const FloatingActionButton(
+            //     tooltip: 'Send Reminder',
+            //     child: Icon(Icons.add),
+            //     onPressed: null,
+            // )
+  }
+}
+
+class AdminParticipantsPage extends StatelessWidget {
+
+  final List<Participant> participants;
+
+  const AdminParticipantsPage({Key? key, required this.participants}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+
+    // scaffold is a layout for the major Material Components
+    return Scaffold(
+          // body is majority of the screen
+      appBar: AppBar(title: Text('Participants')),
+          body: Padding(padding: EdgeInsets.only(top: 30.0), child: ListView.builder(
+              itemCount : 10,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => ParticipantInfoPage(participant: participants[index])));
+                  },
+                  child: Container(
+                    height: 45.0,
+                    decoration: const BoxDecoration(),
+                    child: Column(
+                      children: <Widget>[
+                        Container(padding: EdgeInsets.only(left: 30.0, right: 30.0),
+                          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Container(child: Text(participants[index].participantEmail,
+                                  textAlign: TextAlign.left,
+                                  maxLines: 1,
+                                ),
+                                  decoration: const BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(10.0), topRight: Radius.circular(10.0))
+                                  ),
+                                ),
+                                Container(child: participants[index].takenSurvey ? const Icon(Icons.check, color: Colors.green) : const Icon(Icons.close, color: Colors.red),
+                                  decoration: const BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(10.0), topRight: Radius.circular(10.0))
+                                  ),
+                                )]),),
+                      ],
+                    ),
+                  ),
+                );
+              }
+          ),
+          // OutlinedButton(
+          //   onPressed: addUser,
+          //   child: Text('Add User'),
+          // ),
+          // OutlinedButton(
+          //   onPressed: checkUser,
+          //   child: Text('Check User'),
+          // ),
+        ),
+        bottomSheet: Container(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [TextButton(onPressed: () {
+          Navigator.pop(context);
+          Navigator.pop(context);
+          },
+            child: const Text('Logout', textAlign: TextAlign.center,))],)),
+    );
+      // floatingActionButton: const FloatingActionButton(
+      //     tooltip: 'Send Reminder',
+      //     child: Icon(Icons.add),
+      //     onPressed: null,
+      // ),
+  }
+}
+
+class ParticipantInfoPage extends StatelessWidget {
+
+  final Participant participant;
+
+  const ParticipantInfoPage({Key? key, required this.participant }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+
+    // scaffold is a layout for the major Material Components
+    return Scaffold(
+      appBar: AppBar(title: Text('Participant')),
+            // body is majority of the screen
+            body: Center(
+              child: Column(
+                children: [Container(padding: EdgeInsets.only(top: 30.0, left: 30.0, right: 30.0),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Container(child: Text(participant.participantEmail,
+                          textAlign: TextAlign.left,
+                          maxLines: 1,
+                          style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
+                        ),
+                          decoration: const BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(10.0), topRight: Radius.circular(10.0))
+                          ),
+                        ),
+                        Container(child: Text('Surveys Taken: ${participant.numSurveys}/${participant.surveys.length}',
+                          textAlign: TextAlign.right,
+                          maxLines: 1,
+                          style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
+                        ),
+                          decoration: const BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(10.0), topRight: Radius.circular(10.0))
+                          ),
+                        )]), decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1.0, color: Colors.black))),),
+                  Padding(padding: EdgeInsets.only(top: 30.0), child: ListView.builder(
+                    scrollDirection: Axis.vertical,
+                      shrinkWrap: true,
+                      itemCount : 10,
+                      itemBuilder: (context, index) {
+                          return Container(
+                            height: 45.0,
+                            decoration: const BoxDecoration(),
+                            child: Column(
+                              children: <Widget>[
+                                Container(padding: EdgeInsets.only(left: 30.0, right: 30.0),
+                                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        Container(child: Text(participant.surveys[index].projectId,
+                                          textAlign: TextAlign.left,
+                                          maxLines: 1,
+                                        ),
+                                          decoration: const BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(10.0), topRight: Radius.circular(10.0))
+                                          ),
+                                        ),
+                                        Container(child: Text('${participant.surveys[index].timeTaken.month}/${participant.surveys[index].timeTaken.day}/${participant.surveys[index].timeTaken.year} ${participant.surveys[index].timeTaken.hour}:${participant.surveys[index].timeTaken.minute}',
+                                          textAlign: TextAlign.right,
+                                          maxLines: 1,
+                                        ),
+                                          decoration: const BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(10.0), topRight: Radius.circular(10.0))
+                                          ),
+                                        )]),),
+                              ],
+                            ),
+                        );
+                      }
+                  ),
+                    // OutlinedButton(
+                    //   onPressed: addUser,
+                    //   child: Text('Add User'),
+                    // ),
+                    // OutlinedButton(
+                    //   onPressed: checkUser,
+                    //   child: Text('Check User'),
+                    // ),
+                  ),],)
               ),
-            ),
+        bottomSheet: Container(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [TextButton(onPressed: () {
+          Navigator.pop(context);
+          Navigator.pop(context);
+          Navigator.pop(context);
+          },
+            child: const Text('Logout', textAlign: TextAlign.center,))],)),
+            );
             // floatingActionButton: const FloatingActionButton(
             //     tooltip: 'Send Reminder',
             //     child: Icon(Icons.add),
             //     onPressed: null,
             // ),
-          ),
-        )
-    );
   }
+}
+
+class ListItem {
+  String projectId;
+  String projectName;
+  List<Participant> participants;
+  ListItem(this.projectId, this.projectName, this.participants);
+}
+
+class Participant {
+  String participantEmail;
+  bool takenSurvey;
+  int numSurveys;
+  List<Survey> surveys;
+  Participant(this.participantEmail, this.takenSurvey, this.numSurveys, this.surveys);
+}
+
+class Survey {
+  String projectId;
+  DateTime timeTaken;
+  bool taken;
+  Survey(this.projectId, this.timeTaken, this.taken);
 }
