@@ -15,6 +15,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,7 +55,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   _storeMessage(message);
 }
 
-void _storeMessage(RemoteMessage message) async {
+Future<void> _storeMessage(RemoteMessage message) async {
   //To make sure the data from a firebase message is saved, the notification's
   //info is saved to persistent storage
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -76,11 +77,11 @@ void _storeMessage(RemoteMessage message) async {
   notifs.insert(0, newNotif);
 
   //Limit list to 5 most recent notifications
-  if (notifs.length > 5) {
-    notifs.removeRange(5, notifs.length - 1);
+  if(notifs.length > 5) {
+    notifs.removeRange(4, notifs.length - 1);
   }
 
-  prefs.setStringList("missedNotifs", notifs);
+  await prefs.setStringList("missedNotifs", notifs);
   print("Message handled and saved to storage!");
 }
 
@@ -147,7 +148,7 @@ class _AppState extends State<App> {
 
     if (_messagerInitialized = true) {
       //This should connect to the foreground message handler
-      FirebaseMessaging.onMessage.listen(handleForegroundMessage);
+      //FirebaseMessaging.onMessage.listen(handleForegroundMessage);
 
       // Trying to do this right here causes an error for some reason??
       // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -460,38 +461,49 @@ class LoginPage extends StatelessWidget {
       body: Center(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(
-                  top: 80.0, bottom: 20.0, left: 20.0, right: 20.0),
-              child: TextField(
-                controller: usernameController,
-                obscureText: false,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Email',
+            Flexible(
+              flex: 3,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                    top: 20.0, bottom: 20.0, left: 20.0, right: 20.0),
+                child: TextField(
+                  controller: usernameController,
+                  obscureText: false,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Email',
+                  ),
                 ),
               ),
             ),
-            Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Password',
-                  ),
-                )),
-            Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: TextField(
-                  controller: projectIdController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Project ID',
-                  ),
-                )),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Flexible(
+              flex: 3,
+              child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Password',
+                    ),
+                  )),
+            ),
+            Flexible(
+              flex: 3,
+              child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: TextField(
+                    controller: projectIdController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Project ID',
+                    ),
+                  )),
+            ),
+            Flexible(
+                flex: 3,
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: TextButton(
@@ -505,7 +517,7 @@ class LoginPage extends StatelessWidget {
                     String userExists = await signinUser();
                     // TODO: Set isAdmin if firebase username and password matches
                     // admin username and password
-                    bool isAdmin = true;
+                    bool isAdmin = false;
                     userExists == "" // navigate to appropriate user page
                         ? Navigator.push(
                             context,
@@ -637,7 +649,7 @@ class LoginPage extends StatelessWidget {
                   child: const Text('Sign Up'),
                 ),
               ),
-            ]),
+            ])),
           ],
         ),
       ),
@@ -645,7 +657,121 @@ class LoginPage extends StatelessWidget {
   }
 }
 
-class UserPage extends StatelessWidget {
+class UserPage extends StatefulWidget {
+  const UserPage({Key? key}) : super(key: key);
+
+  @override
+  _UserPageState createState() => _UserPageState();
+}
+
+class _UserPageState extends State<UserPage> {
+
+  late SharedPreferences _SharedPrefs;
+  List<String> MissedNotifs = [];
+  int notifAmount = 0;
+
+  void initializeSharedPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _SharedPrefs = prefs;
+    });
+    updateMissedNotifs();
+  }
+
+  void initializeMessageHandler() async {
+    FirebaseMessaging.onMessage.listen(handleForegroundNotif);
+  }
+
+  void updateMissedNotifs() {
+    setState(() {
+      MissedNotifs = _SharedPrefs.getStringList("missedNotifs") ?? [];
+    });
+    setState(() {
+      notifAmount = MissedNotifs.length;
+    });
+    print("Updated notification list!");
+  }
+
+  //This function defines the widget built into the ListView
+  Widget listViewHelper(BuildContext context, int index) {
+
+    final notifJSON = MissedNotifs[index];
+    final nObject = jsonDecode(notifJSON);
+
+    //["id":idnumber,"received":time,"title":"Test","body":"This is a test notification","url":"test.com",]
+    final dateReceived = DateTime.parse(nObject['received']);
+    final notifInfo = '${nObject['title']} : ${nObject['body']}';
+    final url = nObject['url'];
+    final dateString = DateFormat('yyyy-MM-dd – h:mm a').format(dateReceived);
+
+    //In order to properly access the url object, this needs to be initialized here unfortunately
+    //Against everything I understand about Dart, it works so I'm not too worried
+    //If you can find another way to do it let me know
+    void openNotif() async {
+
+      var newNotifList = <String>[];
+      bool messageCheck = true;
+
+      for(final n in MissedNotifs) {
+        if(messageCheck) {
+          final temp = jsonDecode(n);
+          //Checks the message id, filters out the handled message to remove from storage
+          if (temp['id'] == nObject['id']) {
+            messageCheck = false;
+          } else {
+            newNotifList.add(n);
+          }
+        } else {
+          //Once we've found the matching message doing unnecessary json decoding is slow
+          newNotifList.add(n);
+        }
+      }
+
+      _SharedPrefs.setStringList("missedNotifs", newNotifList);
+
+      updateMissedNotifs();
+
+      if(url != null) {
+        if (await canLaunch(url)) {
+          await launch(url);
+        } else
+          throw "Could not launch $url";
+      }
+    }
+
+    //This part returns the actual widget, along with a pointer to the tap function
+    return Card(
+      child: ListTile(
+        title:Text(notifInfo),
+        subtitle: Text(dateString),
+        onTap: openNotif,
+      )
+    );
+  }
+
+  // void openNotif(String url) {
+  //
+  // }
+
+  void handleForegroundNotif(RemoteMessage message) async {
+    print('Got a notification while in the foreground!');
+    print('Message data: ${message.data}');
+
+    if (message.notification != null) {
+      print('Message also contained a notification: ${message.notification}');
+    }
+
+    await _storeMessage(message);
+    updateMissedNotifs();
+  }
+
+  @override
+  void initState() {
+    initializeSharedPrefs();
+    initializeMessageHandler();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -657,12 +783,22 @@ class UserPage extends StatelessWidget {
         child: Column(
           children: [
             Padding(
-                padding: EdgeInsets.all(20.0),
+                padding: EdgeInsets.all(10.0),
                 child: Text('Notifications',
                     style: TextStyle(
                         fontSize: 20.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.blue))),
+            Flexible(
+                flex: 5,
+                child: Padding(
+                    padding: EdgeInsets.all(5.0),
+                    child: ListView.builder(
+                        padding: const EdgeInsets.all(5),
+                        itemCount: notifAmount,
+                        scrollDirection: Axis.vertical,
+                        shrinkWrap: true,
+                        itemBuilder: listViewHelper))),
             Padding(
                 padding: EdgeInsets.all(20.0),
                 child: TextButton(
@@ -672,9 +808,11 @@ class UserPage extends StatelessWidget {
                       textStyle: const TextStyle(fontSize: 20),
                       backgroundColor: Colors.blue),
                   onPressed: () {
-                    // Remove all notifications
-                    // Probably can slide or tap to get rid of one notification
-                    // Also chloe didn't know what the user UI should really look like
+                    _SharedPrefs.setStringList("missedNotifs", []);
+                    setState(() {
+                      MissedNotifs = [];
+                      notifAmount = 0;
+                    });
                   },
                   child: const Text('Dismiss All'),
                 )),
