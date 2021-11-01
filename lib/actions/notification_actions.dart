@@ -2,22 +2,19 @@ import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../screens/user_screen.dart';
 
-
-void initializeMessageHandler() async {
-  FirebaseMessaging.onMessage.listen(handleForegroundNotif);
-}
 
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   print("Handling a background message: ${message.messageId}");
 
-  _storeMessage(message);
+  storeMessage(message);
 }
 
-Future<void> _storeMessage(RemoteMessage message) async {
+Future<void> storeMessage(RemoteMessage message) async {
   //To make sure the data from a firebase message is saved, the notification's
   //info is saved to persistent storage
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -57,7 +54,7 @@ void handleForegroundMessage(RemoteMessage message) {
     print('Message also contained a notification: ${message.notification}');
   }
 
-  _storeMessage(message);
+  storeMessage(message);
 }
 
 Future<void> setupInteractedMessage() async {
@@ -98,23 +95,11 @@ void _handleMessage(RemoteMessage message) async {
 
   prefs.setStringList("missedNotifs", newNotifList);
 
-  // if (message.data['url'] != null) {
-  //   final url = message.data['url'];
-  //   if (await canLaunch(url)) {
-  //     await launch(url);
-  //   } else
-  //     throw "Could not launch $url";
-  // }
-}
-
-void handleForegroundNotif(RemoteMessage message) async {
-  print('Got a notification while in the foreground!');
-  print('Message data: ${message.data}');
-
-  if (message.notification != null) {
-    print('Message also contained a notification: ${message.notification}');
+  if (message.data['url'] != null) {
+    final url = message.data['url'];
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else
+      throw "Could not launch $url";
   }
-
-  await _storeMessage(message);
-  UserPageState().updateMissedNotifs();
 }

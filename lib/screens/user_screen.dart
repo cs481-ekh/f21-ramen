@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,20 +11,17 @@ class UserPage extends StatefulWidget {
   const UserPage({Key? key}) : super(key: key);
 
   @override
-  UserPageState createState() => UserPageState();
+  _UserPageState createState() => _UserPageState();
 }
 
-class UserPageState extends State<UserPage> {
+class _UserPageState extends State<UserPage> {
 
   late SharedPreferences _SharedPrefs;
   List<String> MissedNotifs = [];
   int notifAmount = 0;
 
-  @override
-  void initState() {
-    initializeSharedPrefs();
-    initializeMessageHandler();
-    super.initState();
+  void initializeMessageHandler() async {
+    FirebaseMessaging.onMessage.listen(handleForegroundNotif);
   }
 
   void initializeSharedPrefs() async {
@@ -42,6 +40,18 @@ class UserPageState extends State<UserPage> {
       notifAmount = MissedNotifs.length;
     });
     print("Updated notification list!");
+  }
+
+  void handleForegroundNotif(RemoteMessage message) async {
+    print('Got a notification while in the foreground!');
+    print('Message data: ${message.data}');
+
+    if (message.notification != null) {
+      print('Message also contained a notification: ${message.notification}');
+    }
+
+    await storeMessage(message);
+    updateMissedNotifs();
   }
 
   //This function defines the widget built into the ListView
@@ -100,6 +110,13 @@ class UserPageState extends State<UserPage> {
           onTap: openNotif,
         )
     );
+  }
+
+  @override
+  void initState() {
+    initializeSharedPrefs();
+    initializeMessageHandler();
+    super.initState();
   }
 
   @override
