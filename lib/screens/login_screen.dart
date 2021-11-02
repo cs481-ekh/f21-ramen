@@ -109,11 +109,11 @@ class LoginPage extends StatelessWidget {
                           textStyle: const TextStyle(fontSize: 20),
                           backgroundColor: Colors.blue),
                       onPressed: () async {
-                        String userExists = await signinUser(usernameController, passwordController, projectIdController);
+                        String userSigninCheck = await signinUser(usernameController, passwordController, projectIdController);
                         // TODO: Set isAdmin if firebase username and password matches
                         // admin username and password
                         bool isAdmin = false;
-                        userExists == "" // navigate to appropriate user page
+                        userSigninCheck == "" // navigate to appropriate user page
                             ? Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -130,7 +130,7 @@ class LoginPage extends StatelessWidget {
                                 content: SingleChildScrollView(
                                   child: ListBody(
                                     children: <Widget>[
-                                      Text(userExists),
+                                      Text(userSigninCheck),
                                     ],
                                   ),
                                 ),
@@ -194,7 +194,7 @@ class LoginPage extends StatelessWidget {
                             ? Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => LoginPage(usernameController: usernameController, passwordController: passwordController, projectIdController: projectIdController, adminProjectIdController: adminProjectIdController)))
+                                builder: (context) => UserPage()))
                             : showDialog(
                             context: context,
                             builder: (BuildContext context) {

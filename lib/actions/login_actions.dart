@@ -91,7 +91,6 @@ Future<String> addNewUser(usernameController, passwordController, projectIdContr
   // but only if auth worked
   // TODO: do we need to handle if auth succeeded but db add failed -- delete account?
   String addDb = await addUserToDatabase(usernameController.text, projectIdController.text);
-  print("string db: $addDb");
   if (addDb != "") {
     errorMessage = "Could not add user to database: $addDb";
     return errorMessage;
