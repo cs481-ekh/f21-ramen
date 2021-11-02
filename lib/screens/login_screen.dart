@@ -2,6 +2,7 @@ import 'package:ema/screens/user_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../actions/login_actions.dart';
+import 'admin_screen.dart';
 
 class LoginPage extends StatelessWidget {
   final TextEditingController usernameController;
@@ -117,10 +118,9 @@ class LoginPage extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                                 builder: (context) => isAdmin
-                                    ? LoginPage(usernameController: usernameController, passwordController: passwordController, projectIdController: projectIdController, adminProjectIdController: adminProjectIdController)
-                        // AdminPage(
-                        //             adminProjectIdController:
-                        //             adminProjectIdController)
+                                    ? AdminPage(
+                                    adminProjectIdController:
+                                    adminProjectIdController)
                                     : UserPage()))
                             : showDialog(
                             context: context,

@@ -7,6 +7,11 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../actions/notification_actions.dart';
 
+/// User screen, not as separated as I'd like; lots of state management stuff,
+/// so ran into issues.
+/// Would like to separate out notification list into own file.
+/// Other applicable methods in actions/notifications_actions.dart
+
 class UserPage extends StatefulWidget {
   const UserPage({Key? key}) : super(key: key);
 
