@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ema/utils/data_classes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -89,12 +90,16 @@ Future<String> addNewUser(usernameController, passwordController, projectIdContr
 
   // add user to database to save projectId and other data
   // but only if auth worked
-  // TODO: do we need to handle if auth succeeded but db add failed -- delete account?
+  // TODO: do we need to handle if auth succeeded but db add failed -- delete account and try again?
   String addDb = await addUserToDatabase(usernameController.text, projectIdController.text);
   if (addDb != "") {
     errorMessage = "Could not add user to database: $addDb";
     return errorMessage;
   }
+
+  // if no errors yet, instantiate user object
+  var firebaseUser = FirebaseAuth.instance.currentUser;
+  InternalUser.instance(user: firebaseUser, projectId: projectIdController.text, isAdmin: false);
 
   return errorMessage;
 }
@@ -105,6 +110,7 @@ Future<String> addUserToDatabase(String username, String projectId) async {
       .set({
     'email': username,
     'projectId': projectId,
+    'is_admin': false,
     'dateCreated': DateTime.now()
   })
       .then((value) => "")
@@ -138,33 +144,67 @@ Future<dynamic> getUsersProjectId(String username) async {
   return data;
 }
 
+Future<dynamic> getUsersAdminPriv(String username) async {
+  dynamic data;
+
+  await FirebaseFirestore.instance
+      .collection('users')
+      .doc(username)
+      .get()
+      .then((DocumentSnapshot documentSnapshot) {
+    if (documentSnapshot.exists) {
+      data = documentSnapshot.get("is_admin");
+    } else {
+      data = null;
+    }
+  });
+
+  return data;
+}
+
 Future<String> signinUser(usernameController, passwordController, projectIdController) async {
   String errorMessage = "";
 
   // sign-in using auth
+  var authUser;
   try {
-    await auth.signInWithEmailAndPassword(
+    UserCredential result = await auth.signInWithEmailAndPassword(
         email: usernameController.text, password: passwordController.text);
+    authUser = result.user;
   } catch (error) {
     errorMessage = error.toString();
     return errorMessage;
   }
 
   // get user data from firebase data for project id
-  dynamic userProjectId = await getUsersProjectId(usernameController.text);
-  if (userProjectId == null) {
+  // get if user is admin
+  dynamic userIsAdmin = await getUsersAdminPriv(usernameController.text);
+  if (userIsAdmin == null) {
     errorMessage = "Unable to find user in database";
     return errorMessage;
   }
-  //subscribe user to project
-  bool subscribeCheck = await subscribeToProjectTopic(userProjectId);
-  if (!subscribeCheck) {
-    errorMessage =
-    "Could not subscribe user to project using ID in database.";
-    return errorMessage;
-  } else {
-    subscribeToProjectTopic(projectIdController.text);
+
+  // if not an admin, get projectId and subscribe to project
+  dynamic userProjectId;
+  if(!userIsAdmin) {
+    userProjectId = await getUsersProjectId(usernameController.text);
+    if (userProjectId == null) {
+      errorMessage = "Unable to find user in database";
+      return errorMessage;
+    }
+
+    //subscribe user to project
+    bool subscribeCheck = await subscribeToProjectTopic(userProjectId);
+    if (!subscribeCheck) {
+      errorMessage =
+      "Could not subscribe user to project using ID in database.";
+      return errorMessage;
+    } else {
+      subscribeToProjectTopic(projectIdController.text);
+    }
   }
+  // if no errors, instantiate user instance
+  InternalUser.instance(user: authUser, projectId: userProjectId, isAdmin: userIsAdmin);
 
   return "";
 }

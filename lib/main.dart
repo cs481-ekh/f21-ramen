@@ -57,27 +57,6 @@ class _AppState extends State<App> {
 
   // Define an async function to initialize FlutterFire
   void initializeFlutterFire() async {
-    // try {
-    //   // Wait for Firebase to initialize and set `_initialized` state to true
-    //   await Firebase.initializeApp();
-    //   setState(() {
-    //     _initialized = true;
-    //   });
-    // } catch (e) {
-    //   // Set `_error` state to true if Firebase initialization fails
-    //   setState(() {
-    //     _error = true;
-    //   });
-    // }
-    //
-    // if (_error) {
-    //   print("Something went wrong with Firebase...");
-    // } else {
-    //   print("success!");
-    // }
-    // if (!_initialized) {
-    //   print("loading...");
-    // }
 
     //I'm initializing this here because I'm not sure if there's a better spot for it
     //We can move it if needed but it appears to work here for now
