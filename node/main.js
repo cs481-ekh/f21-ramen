@@ -1,34 +1,40 @@
-import axios from 'axios';
-import express from 'express';
-import { initializeApp } from 'firebase-admin/app';
+//import axios from 'axios';
+//import express from 'express';
 
-//For security reasons this has to be hardcoded when testing. We shouldn't store the key in our repository
-var serviceAccount = require("path/to/serviceAccountKey.json");
+const schedule = require('node-schedule');
 
-const app = initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://ema-ramen-default-rtdb.firebaseio.com"
-});
+const job = schedule.scheduleJob('0 * * * *', function() {sendNotif("notif_test","https://www.npmjs.com/package/node-schedule","Testing again","Sorry for spam")});
 
-const message = {
-    data: {
-        url: "https://en.wikipedia.org/wiki/Node.js"
-    },
-    topic: "test-notif",
-    notification: {
-        title: "Test from NodeJS",
-        body: "Did this work properly?",
-    },
-};
-  
-app.messaging()
-    .send(message)
-    .then((response) => {
-      console.log("Successfully sent message:", response);
-    })
-    .catch((error) => {
-      console.log("Error sending message:", error);
+function sendNotif(topic, url, title, body) {
+    const admin = require("firebase-admin");
+    const credentials = require("./ema-ramen-firebase-adminsdk-7lvc1-45079796ab.json");
+
+    admin.initializeApp({
+        credential: admin.credential.cert(credentials),
+        databaseURL: "https://ema-ramen-default-rtdb.firebaseio.com",
     });
+
+    const message = {
+        data: {
+            url: url
+        },
+        topic: topic,
+        notification: {
+            title: title,
+            body: body,
+        },
+    };
+
+
+    admin.messaging()
+        .send(message)
+        .then((response) => {
+            console.log("Successfully sent message:", response);
+        })
+        .catch((error) => {
+            console.log("Error sending message:", error);
+        });
+}
 //general structure for sending a post using axios
 /*
 axios
