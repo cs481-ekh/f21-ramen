@@ -1,3 +1,4 @@
+import 'package:ema/utils/global_funcs.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -13,18 +14,8 @@ class AdminPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    FirebaseAuth auth = FirebaseAuth.instance;
-    auth.userChanges().listen((User? user) {
-      if (user == null) {
-        print("Signed OUT");
-      } else {
-        print('Signed IN');
-      }
-    });
 
-    Future<void> signOut() {
-      return auth.signOut();
-    }
+    startUserAuthListener(context);
 
     List<ListItem> list = [];
     List<Participant> participants = [];

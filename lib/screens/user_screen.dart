@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:ema/utils/global_funcs.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -126,6 +127,9 @@ class _UserPageState extends State<UserPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    startUserAuthListener(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('EMA'),
