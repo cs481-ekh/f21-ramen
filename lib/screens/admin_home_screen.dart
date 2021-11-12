@@ -1,3 +1,4 @@
+import 'package:ema/utils/global_funcs.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -22,18 +23,6 @@ class AdminHomePageState extends State<AdminHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    FirebaseAuth auth = FirebaseAuth.instance;
-    auth.userChanges().listen((User? user) {
-      if (user == null) {
-        print("Signed OUT");
-      } else {
-        print('Signed IN');
-      }
-    });
-
-    Future<void> signOut() {
-      return auth.signOut();
-    }
 
     // scaffold is a layout for the major Material Components
     return Scaffold(
@@ -95,7 +84,7 @@ class AdminHomePageState extends State<AdminHomePage> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                signOut();
               },
               child: const Text('Logout'),
             ),

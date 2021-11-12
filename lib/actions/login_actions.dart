@@ -185,7 +185,7 @@ Future<String> signinUser(usernameController, passwordController, projectIdContr
   }
 
   // if not an admin, get projectId and subscribe to project
-  dynamic userProjectId;
+  dynamic userProjectId = "";
   if(!userIsAdmin) {
     userProjectId = await getUsersProjectId(usernameController.text);
     if (userProjectId == null) {
@@ -207,8 +207,4 @@ Future<String> signinUser(usernameController, passwordController, projectIdContr
   InternalUser.instance(user: authUser, projectId: userProjectId, isAdmin: userIsAdmin);
 
   return "";
-}
-
-Future<void> signOut() {
-  return auth.signOut();
 }

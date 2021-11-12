@@ -5,13 +5,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
 class InternalUser {
-  final User? user;
-  final String? projectId;
-  final bool? isAdmin;
+  User? user;
+  String? projectId;
+  bool isAdmin = false;
 
   InternalUser({
     this.user,
-    this.projectId = "",
+    this.projectId,
     this.isAdmin = false
   });
 
@@ -24,16 +24,17 @@ class InternalUser {
     }
     return _instance;
   }
-  // static final InternalUser _singleton = InternalUser._internal();
-  //
-  // InternalUser._internal();
-  //
-  // factory InternalUser(var user, bool isAdmin) {
-  //   _singleton.user = user;
-  //   _singleton.isAdmin = isAdmin;
-  //   return _singleton;
-  // }
+}
 
+// for cleaning up user object upon exit or sign-out
+Future<void> clearInternalUser() async {
+  InternalUser? internalUser = InternalUser.instance();
+
+  if(internalUser != null){
+    internalUser.user = null;
+    internalUser.projectId = null;
+    internalUser.isAdmin = false;
+  }
 }
 
 class ListItem {

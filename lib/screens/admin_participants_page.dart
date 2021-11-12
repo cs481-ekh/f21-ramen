@@ -1,4 +1,5 @@
 import 'package:ema/utils/data_classes.dart';
+import 'package:ema/utils/global_funcs.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -83,8 +84,7 @@ class AdminParticipantsPage extends StatelessWidget {
             children: [
               TextButton(
                   onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pop(context);
+                    signOut();
                   },
                   child: const Text(
                     'Logout',

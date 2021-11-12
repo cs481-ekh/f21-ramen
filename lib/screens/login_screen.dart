@@ -1,5 +1,6 @@
 import 'package:ema/screens/user_screen.dart';
 import 'package:ema/utils/data_classes.dart';
+import 'package:ema/utils/global_funcs.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../actions/login_actions.dart';
@@ -19,16 +20,6 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // FirebaseAuth auth = FirebaseAuth.instance;
-    // auth.userChanges().listen((User? user) {
-    //   if (user == null) {
-    //     // TODO: if user is not logged in, navigate to login/register page, move this listener to app()
-    //     print('Signed OUT');
-    //   } else {
-    //     print('Signed IN');
-    //   }
-    // });
-
 
     return Scaffold(
       appBar: AppBar(
@@ -111,9 +102,10 @@ class LoginPage extends StatelessWidget {
                           backgroundColor: Colors.blue),
                       onPressed: () async {
                         String userSigninCheck = await signinUser(usernameController, passwordController, projectIdController);
-                        // TODO: Set isAdmin if firebase username and password matches
-                        // admin username and password
-                        bool isAdmin = InternalUser.instance()?.isAdmin ?? false;
+                        bool isAdmin = false;
+                        if(InternalUser.instance()?.isAdmin == true){
+                            isAdmin = true;
+                        }
                         userSigninCheck == "" // navigate to appropriate user page
                             ? Navigator.push(
                             context,
