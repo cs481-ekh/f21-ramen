@@ -88,7 +88,7 @@ class AdminProjectPage extends StatelessWidget {
                             content: SingleChildScrollView(
                               child: ListBody(
                                 children: <Widget>[
-                                      addProjectForm(projectIdController: projectIdController, projectDescController: projectDescController)
+                                      AddProjectForm(projectIdController: projectIdController, projectDescController: projectDescController)
                                 ],
                               ),
                             ),
@@ -127,30 +127,26 @@ class AdminProjectPage extends StatelessWidget {
                           );
                         });
                   },
-                  child: const Text(
+                  child: const Padding(
+                  padding: EdgeInsets.only(
+                      top: 20.0, bottom: 100.0, left: 20.0, right: 20.0),
+                  child: Text(
                     'Create New Project',
                     textAlign: TextAlign.center,
                   )),
-              TextButton(
-                  onPressed: () {
-                    signOut();
-                  },
-                  child: const Text(
-                    'Logout',
-                    textAlign: TextAlign.center,
-                  ))
+              )
             ],
           )),
     );
   }
 }
 
-class addProjectForm extends StatelessWidget {
+class AddProjectForm extends StatelessWidget {
 
   final TextEditingController projectIdController;
   final TextEditingController projectDescController;
 
-  addProjectForm(
+  const AddProjectForm(
       {Key? key, required this.projectIdController,
         required this.projectDescController}) : super(key: key);
 
@@ -160,6 +156,11 @@ class addProjectForm extends StatelessWidget {
 
     return Column (
         children: [
+          const Padding(
+            padding: EdgeInsets.only(
+                bottom: 20.0
+            ),
+          ),
           TextField(
             controller: projectIdController,
             obscureText: false,
@@ -168,7 +169,13 @@ class addProjectForm extends StatelessWidget {
               labelText: 'Project ID',
             )
           ),
+          const Padding(
+            padding: EdgeInsets.only(
+                bottom: 20.0
+            ),
+          ),
           TextField(
+              maxLines: 5,
               controller: projectDescController,
               obscureText: false,
               decoration: const InputDecoration(
