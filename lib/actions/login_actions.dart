@@ -53,7 +53,10 @@ Future<String> addProjectToDatabase(String projectId, String description) {
 }
 
 Future<bool> checkProjectIdExists(String projectId) async {
-  bool check = await FirebaseFirestore.instance
+
+  bool check = true;
+
+  check = await FirebaseFirestore.instance
       .collection('projects')
       .doc(projectId)
       .get()
