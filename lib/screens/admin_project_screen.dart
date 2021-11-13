@@ -1,3 +1,4 @@
+import 'package:ema/actions/admin_actions.dart';
 import 'package:ema/actions/login_actions.dart';
 import 'package:ema/utils/data_classes.dart';
 import 'package:ema/utils/global_funcs.dart';
@@ -94,18 +95,32 @@ class AdminProjectPage extends StatelessWidget {
                             actions: <Widget>[
                               TextButton(
                                 child: const Text('Submit'),
-                                onPressed: () {
-                                // if (key?.currentState!.validate()) {
-                                //   Navigator.pop(context);
-                                // }
+                                onPressed: () async {
+                                  if(projectIdController.text.isNotEmpty && projectDescController.text.isNotEmpty){
+                                    String? projectCreated = await createNewProject(projectIdController.text, projectDescController.text);
+                                    if(projectCreated != null && projectCreated != ""){
+                                      ScaffoldMessenger.of(context).showSnackBar( SnackBar(
+                                        content: Text(projectCreated),
+                                      ));
+                                    }
+                                    else{
+                                      ScaffoldMessenger.of(context).showSnackBar( SnackBar(
+                                        content: Text('Created project with ID: '+ projectIdController.text),
+                                      ));
+                                    }
+                                  }
+                                  else{
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                          content: Text("Cannot create project: 1 or more fields are empty."),
+                                    ));
+                                  }
+                                  Navigator.pop(context);
                                 },
                               ),
                               TextButton(
                                 child: const Text('Cancel'),
                                 onPressed: () {
-                                  // if (key?.currentState!.validate()) {
-                                  //   Navigator.pop(context);
-                                  // }
+                                    Navigator.pop(context);
                                 },
                               ),
                             ],
