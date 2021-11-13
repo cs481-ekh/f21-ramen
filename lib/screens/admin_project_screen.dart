@@ -1,3 +1,5 @@
+import 'package:ema/actions/admin_actions.dart';
+import 'package:ema/actions/login_actions.dart';
 import 'package:ema/utils/data_classes.dart';
 import 'package:ema/utils/global_funcs.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,7 +10,11 @@ import 'admin_participants_page.dart';
 class AdminProjectPage extends StatelessWidget {
   final List<ListItem> items;
 
-  const AdminProjectPage({Key? key, required this.items}) : super(key: key);
+  final projectIdController = TextEditingController();
+  final projectDescController = TextEditingController();
+
+  AdminProjectPage({Key? key, required this.items}) : super(key: key);
+  // final formGlobalKey = GlobalKey < FormState > ();
 
   @override
   Widget build(BuildContext context) {
@@ -74,14 +80,109 @@ class AdminProjectPage extends StatelessWidget {
             children: [
               TextButton(
                   onPressed: () {
-                    signOut();
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Create New Project"),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: <Widget>[
+                                      AddProjectForm(projectIdController: projectIdController, projectDescController: projectDescController)
+                                ],
+                              ),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('Submit'),
+                                onPressed: () async {
+                                  if(projectIdController.text.isNotEmpty && projectDescController.text.isNotEmpty){
+                                    String? projectCreated = await createNewProject(projectIdController.text, projectDescController.text);
+                                    if(projectCreated != null && projectCreated != ""){
+                                      ScaffoldMessenger.of(context).showSnackBar( SnackBar(
+                                        content: Text(projectCreated),
+                                      ));
+                                    }
+                                    else{
+                                      ScaffoldMessenger.of(context).showSnackBar( SnackBar(
+                                        content: Text('Created project with ID: '+ projectIdController.text),
+                                      ));
+                                    }
+                                  }
+                                  else{
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                          content: Text("Cannot create project: 1 or more fields are empty."),
+                                    ));
+                                  }
+                                  Navigator.pop(context);
+                                },
+                              ),
+                              TextButton(
+                                child: const Text('Cancel'),
+                                onPressed: () {
+                                    Navigator.pop(context);
+                                },
+                              ),
+                            ],
+                          );
+                        });
                   },
-                  child: const Text(
-                    'Logout',
+                  child: const Padding(
+                  padding: EdgeInsets.only(
+                      top: 20.0, bottom: 100.0, left: 20.0, right: 20.0),
+                  child: Text(
+                    'Create New Project',
                     textAlign: TextAlign.center,
-                  ))
+                  )),
+              )
             ],
           )),
     );
   }
 }
+
+class AddProjectForm extends StatelessWidget {
+
+  final TextEditingController projectIdController;
+  final TextEditingController projectDescController;
+
+  const AddProjectForm(
+      {Key? key, required this.projectIdController,
+        required this.projectDescController}) : super(key: key);
+
+
+  @override
+  Widget build(BuildContext context) {
+
+    return Column (
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(
+                bottom: 20.0
+            ),
+          ),
+          TextField(
+            controller: projectIdController,
+            obscureText: false,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Project ID',
+            )
+          ),
+          const Padding(
+            padding: EdgeInsets.only(
+                bottom: 20.0
+            ),
+          ),
+          TextField(
+              maxLines: 5,
+              controller: projectDescController,
+              obscureText: false,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Project Description',
+              )
+          )
+        ]
+    );
+  }}

@@ -37,23 +37,11 @@ Future<bool> subscribeToProjectTopic(String projectId) {
       .catchError((error) => false);
 }
 
-Future<String> addProjectToDatabase(String projectId, String description) {
-  CollectionReference projects =
-  FirebaseFirestore.instance.collection('projects');
-
-  return projects
-      .doc(projectId)
-      .set({
-    'projectId': projectId,
-    'description': description,
-    'dateCreated': DateTime.now()
-  })
-      .then((value) => "")
-      .catchError((error) => error.toString());
-}
-
 Future<bool> checkProjectIdExists(String projectId) async {
-  bool check = await FirebaseFirestore.instance
+
+  bool check = true;
+
+  check = await FirebaseFirestore.instance
       .collection('projects')
       .doc(projectId)
       .get()
