@@ -1,3 +1,4 @@
+import 'package:ema/screens/user_project_id_screen.dart';
 import 'package:ema/screens/user_screen.dart';
 import 'package:ema/utils/data_classes.dart';
 import 'package:ema/utils/global_funcs.dart';
@@ -77,18 +78,6 @@ class LoginPage extends StatelessWidget {
                   )),
             ),
             Flexible(
-              flex: 3,
-              child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: TextField(
-                    controller: projectIdController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Project ID',
-                    ),
-                  )),
-            ),
-            Flexible(
                 flex: 3,
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Padding(
@@ -101,7 +90,7 @@ class LoginPage extends StatelessWidget {
                           textStyle: const TextStyle(fontSize: 20),
                           backgroundColor: Colors.blue),
                       onPressed: () async {
-                        String userSigninCheck = await signinUser(usernameController, passwordController, projectIdController);
+                        String userSigninCheck = await signinUser(usernameController, passwordController);
                         bool isAdmin = false;
                         if(InternalUser.instance()?.isAdmin == true){
                             isAdmin = true;
@@ -155,10 +144,6 @@ class LoginPage extends StatelessWidget {
                         RegExp exp = RegExp(r"\w+@.*\.(edu|com)");
                         bool validEmail = exp.hasMatch(usernameController.text);
                         String error = "";
-                        if (validEmail) {
-                          error = await addNewUser(usernameController, passwordController, projectIdController);
-                        }
-
                         isEmpty
                             ? showDialog(
                             context: context,
@@ -187,7 +172,7 @@ class LoginPage extends StatelessWidget {
                             ? Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => UserPage()))
+                                builder: (context) => ProjectIdPage(usernameController: usernameController, passwordController: passwordController, projectIdController: projectIdController)))
                             : showDialog(
                             context: context,
                             builder: (BuildContext context) {
