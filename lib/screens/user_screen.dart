@@ -133,7 +133,13 @@ class _UserPageState extends State<UserPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('EMA'),
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            }),
       ),
+      
       // body is majority of the screen
       body: Center(
         child: Column(

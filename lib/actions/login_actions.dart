@@ -150,7 +150,7 @@ Future<dynamic> getUsersAdminPriv(String username) async {
   return data;
 }
 
-Future<String> signinUser(usernameController, passwordController, projectIdController) async {
+Future<String> signinUser(usernameController, passwordController) async {
   String errorMessage = "";
 
   // sign-in using auth
@@ -187,8 +187,6 @@ Future<String> signinUser(usernameController, passwordController, projectIdContr
       errorMessage =
       "Could not subscribe user to project using ID in database.";
       return errorMessage;
-    } else {
-      subscribeToProjectTopic(projectIdController.text);
     }
   }
   // if no errors, instantiate user instance
