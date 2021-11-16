@@ -97,7 +97,7 @@ class LoginPage extends StatelessWidget {
                         }
                         if (userSigninCheck == "") { // navigate to appropriate user page
                           InternalUser.setStoredInstance(usernameController.text, passwordController.text);
-                          Navigator.push(
+                          Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
