@@ -68,26 +68,27 @@ class _AppState extends State<App> {
 
     //On iOS, the user needs to give permission for cloud messaging
     //On Android it's authorized automatically
-    NotificationSettings settings = await messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
+    // NotificationSettings settings = await messaging.requestPermission(
+    //   alert: true,
+    //   announcement: false,
+    //   badge: true,
+    //   carPlay: false,
+    //   criticalAlert: false,
+    //   provisional: false,
+    //   sound: true,
+    // );
 
-    print('User granted permission: ${settings.authorizationStatus}');
-    if (settings.authorizationStatus.toString() ==
-        "AuthorizationStatus.authorized") {
-      setState(() {
-        _messagerInitialized = true;
-      });
-    }
-    if (!_messagerInitialized) {
-      print("Permission for messages not given!");
-    }
+
+    // print('User granted permission: ${settings.authorizationStatus}');
+    // if (settings.authorizationStatus.toString() ==
+    //     "AuthorizationStatus.authorized") {
+    //   setState(() {
+    //     _messagerInitialized = true;
+    //   });
+    // }
+    // if (!_messagerInitialized) {
+    //   print("Permission for messages not given!");
+    // }
 
     if (_messagerInitialized = true) {
       //This should connect to the foreground message handler
@@ -102,7 +103,7 @@ class _AppState extends State<App> {
     bool saved = await InternalUser.checkSavedLogin();
     if(saved) {
       String? error = await InternalUser.loginWithStoredInstance();
-      if(error != null) {
+      if(error == null) {
         setState(() {
           _savedLogin = true;
         });
