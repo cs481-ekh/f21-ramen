@@ -9,6 +9,8 @@ import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'actions/notification_actions.dart';
 import 'screens/login_screen.dart';
 import 'utils/data_classes.dart';
+import 'screens/user_screen.dart';
+import 'screens/admin_screen.dart';
 
 // firebase plugins
 import 'package:firebase_core/firebase_core.dart';
@@ -54,6 +56,8 @@ class _AppState extends State<App> {
   final projectIdController = TextEditingController();
   final adminProjectIdController = TextEditingController();
   bool _messagerInitialized = false;
+  bool _savedLogin = false;
+  bool _loginInitialized = false;
 
   // Define an async function to initialize FlutterFire
   void initializeFlutterFire() async {
@@ -94,9 +98,30 @@ class _AppState extends State<App> {
     }
   }
 
+  void checkSavedLogin() async {
+    bool saved = await InternalUser.checkSavedLogin();
+    if(saved) {
+      String? error = await InternalUser.loginWithStoredInstance();
+      if(error != null) {
+        setState(() {
+          _savedLogin = true;
+        });
+      } else {
+        print("Error logging in with saved credentials!");
+        print(error);
+        await InternalUser.clearStoredInstance();
+      }
+    }
+    setState(() {
+      _loginInitialized = true;
+    });
+
+  }
+
   @override
   void initState() {
     initializeFlutterFire();
+    checkSavedLogin();
     super.initState();
     setupInteractedMessage();
   }
@@ -115,12 +140,29 @@ class _AppState extends State<App> {
   Widget build(BuildContext context) {
     // scaffold is a layout for the major Material Components
 
-    return MaterialApp(
-      home: LoginPage(
-          usernameController: usernameController,
-          passwordController: passwordController,
-          projectIdController: projectIdController,
-          adminProjectIdController: adminProjectIdController),
-    );
+    if(_savedLogin && _loginInitialized) {
+      bool isAdmin = false;
+      if (InternalUser.instance()?.isAdmin == true) {
+        isAdmin = true;
+      }
+      return MaterialApp(
+        home: isAdmin
+            ? AdminPage(adminProjectIdController: adminProjectIdController)
+            : UserPage());
+    }
+
+    if(_loginInitialized) {
+      return MaterialApp(
+        home: LoginPage(
+            usernameController: usernameController,
+            passwordController: passwordController,
+            projectIdController: projectIdController,
+            adminProjectIdController: adminProjectIdController),
+      );
+    } else {
+      return MaterialApp(
+        home: Text("Loading...")
+      );
+    }
   }
 }

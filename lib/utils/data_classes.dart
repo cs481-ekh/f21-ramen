@@ -44,7 +44,14 @@ class InternalUser {
       String errorMessage = await signinUser(userName, password);
       if(errorMessage!= "") return errorMessage;
     }
+  }
 
+  //Checks stored user info, but doesn't do anything with it
+  static Future<bool> checkSavedLogin() async {
+    final storage = new FlutterSecureStorage();
+    String user = await storage.read(key: 'user') ?? '';
+    if(user != '') return true;
+    else return false;
   }
 
   //This wipes the stored user information, but not the InternalUser instance
@@ -54,6 +61,7 @@ class InternalUser {
     await storage.deleteAll();
   }
 
+  //Sets the stored login data, should be called after successful login
   static setStoredInstance(username, password) async {
     final storage = new FlutterSecureStorage();
     await storage.write(key: 'user', value: username);
