@@ -2,7 +2,9 @@
 // plus our own user information
 // instantiate this using: InternalUser.instance(user: <user>, projectId: <projectId>, isAdmin: <isAdmin>
 // access the instance with InternalUser.instance() or InternalUser.instance().projectId, etc.
+import 'package:ema/actions/login_actions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class InternalUser {
   User? user;
@@ -15,6 +17,7 @@ class InternalUser {
     this.isAdmin = false
   });
 
+  //This actually works now, but the clearInstance method is not called properly in many cases
   static InternalUser? _instance;
 
   static InternalUser? instance({user, projectId, isAdmin}){
@@ -22,7 +25,39 @@ class InternalUser {
       _instance = InternalUser(user: user, projectId: projectId, isAdmin: isAdmin);
       return _instance;
     }
+    if(_instance!.user == null) {
+      _instance!.user = user;
+      _instance!.projectId = projectId;
+      _instance!.isAdmin = isAdmin;
+    }
     return _instance;
+  }
+
+  //This gets the user information stored with FlutterSecureStore *and* logs in with that info
+  static Future<String?> loginWithStoredInstance() async {
+    final storage = new FlutterSecureStorage();
+    Map<String, String> allValues = await storage.readAll();
+    String userName = allValues['user'] ?? '';
+    String password = allValues['password'] ?? '';
+
+    if(userName != '') {
+      String errorMessage = await signinUser(userName, password);
+      if(errorMessage!= "") return errorMessage;
+    }
+
+  }
+
+  //This wipes the stored user information, but not the InternalUser instance
+  //Both this method and clearInternalUser should be called when logging out
+  static clearStoredInstance() async {
+    final storage = new FlutterSecureStorage();
+    await storage.deleteAll();
+  }
+
+  static setStoredInstance(username, password) async {
+    final storage = new FlutterSecureStorage();
+    await storage.write(key: 'user', value: username);
+    await storage.write(key: 'password', value: password);
   }
 }
 
