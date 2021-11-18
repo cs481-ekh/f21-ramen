@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ema/actions/login_actions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 
 Future<String?> createNewProject(String projectId, String projectDesc) async{
 
@@ -36,4 +39,24 @@ Future<String> addProjectToDatabase(String projectId, String description) {
   })
       .then((value) => "")
       .catchError((error) => error.toString());
+}
+
+Future<http.Response> scheduleNotification(int? minute, int? hour, int? year, int? month, int? day) {
+  return http.post(
+    Uri.parse('http://localhost:3000/test'),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(<String, dynamic>{
+      'topic': 'notif_test',
+      'url': 'https://nodejs.dev/learn/get-http-request-body-data-using-nodejs',
+      'title': 'JSON POST test',
+      'message': 'Tedious',
+      'year': year,
+      'month': month,
+      'day': day,
+      'hour': hour,
+      'minute': minute
+    }),
+  );
 }

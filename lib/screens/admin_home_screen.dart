@@ -1,3 +1,4 @@
+import 'package:ema/actions/admin_actions.dart';
 import 'package:ema/utils/global_funcs.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -78,6 +79,7 @@ class AdminHomePageState extends State<AdminHomePage> {
             ),
             TextButton(
               onPressed: () {
+                scheduleNotification(_time?.minute, _time?.hour, _selectedDay?.year, _selectedDay?.month, _selectedDay?.day);
                 print('Scheduled');
               },
               child: const Text('Schedule'),
