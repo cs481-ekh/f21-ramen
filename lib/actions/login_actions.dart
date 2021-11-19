@@ -88,6 +88,7 @@ Future<String> addNewUser(usernameController, passwordController, projectIdContr
   // if no errors yet, instantiate user object
   var firebaseUser = FirebaseAuth.instance.currentUser;
   InternalUser.instance(user: firebaseUser, projectId: projectIdController.text, isAdmin: false);
+  await InternalUser.setStoredInstance(usernameController.text, passwordController.text);
 
   return errorMessage;
 }
@@ -150,14 +151,14 @@ Future<dynamic> getUsersAdminPriv(String username) async {
   return data;
 }
 
-Future<String> signinUser(usernameController, passwordController) async {
+Future<String> signinUser(username, password) async {
   String errorMessage = "";
 
   // sign-in using auth
   var authUser;
   try {
     UserCredential result = await auth.signInWithEmailAndPassword(
-        email: usernameController.text, password: passwordController.text);
+        email: username, password: password);
     authUser = result.user;
   } catch (error) {
     errorMessage = error.toString();
@@ -166,7 +167,7 @@ Future<String> signinUser(usernameController, passwordController) async {
 
   // get user data from firebase data for project id
   // get if user is admin
-  dynamic userIsAdmin = await getUsersAdminPriv(usernameController.text);
+  dynamic userIsAdmin = await getUsersAdminPriv(username);
   if (userIsAdmin == null) {
     errorMessage = "Unable to find user in database";
     return errorMessage;
@@ -175,7 +176,7 @@ Future<String> signinUser(usernameController, passwordController) async {
   // if not an admin, get projectId and subscribe to project
   dynamic userProjectId = "";
   if(!userIsAdmin) {
-    userProjectId = await getUsersProjectId(usernameController.text);
+    userProjectId = await getUsersProjectId(username);
     if (userProjectId == null) {
       errorMessage = "Unable to find user in database";
       return errorMessage;

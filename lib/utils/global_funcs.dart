@@ -26,7 +26,7 @@ Future<void> startUserAuthListener(context) async {
     if (user == null) {
       // TODO; need to name routes, better navigation, and clean-up navigation when it occurs
 
-      Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) =>
           LoginPage(
               usernameController: usernameController,
               passwordController: passwordController,
@@ -50,5 +50,6 @@ Future<void> startUserAuthListener(context) async {
 // triggers sign out for above listener
 Future<void> signOut() {
   clearInternalUser();
+  InternalUser.clearStoredInstance();
   return FirebaseAuth.instance.signOut();
 }

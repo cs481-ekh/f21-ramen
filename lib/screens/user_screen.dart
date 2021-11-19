@@ -133,11 +133,11 @@ class _UserPageState extends State<UserPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('EMA'),
-        leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            }),
+        // leading: IconButton(
+        //     icon: const Icon(Icons.arrow_back),
+        //     onPressed: () {
+        //       Navigator.of(context).popUntil((route) => route.isFirst);
+        //     }),
       ),
       
       // body is majority of the screen
@@ -178,6 +178,14 @@ class _UserPageState extends State<UserPage> {
                   },
                   child: const Text('Dismiss All'),
                 )),
+            Padding(
+                padding: EdgeInsets.all(20.0),
+                child: TextButton(
+                  onPressed: () {
+                    signOut();
+                  },
+                  child: const Text('Logout'),
+                ),)
           ],
         ),
       ),

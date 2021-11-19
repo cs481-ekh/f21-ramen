@@ -9,6 +9,8 @@ import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'actions/notification_actions.dart';
 import 'screens/login_screen.dart';
 import 'utils/data_classes.dart';
+import 'screens/user_screen.dart';
+import 'screens/admin_screen.dart';
 
 // firebase plugins
 import 'package:firebase_core/firebase_core.dart';
@@ -21,6 +23,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 
 void main() async {
@@ -30,7 +33,6 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   runApp(App());
 }
-
 
 class App extends StatefulWidget {
   const App({Key? key}) : super(key: key);
@@ -54,6 +56,8 @@ class _AppState extends State<App> {
   final projectIdController = TextEditingController();
   final adminProjectIdController = TextEditingController();
   bool _messagerInitialized = false;
+  bool _savedLogin = false;
+  bool _loginInitialized = false;
 
   // Define an async function to initialize FlutterFire
   void initializeFlutterFire() async {
@@ -64,26 +68,27 @@ class _AppState extends State<App> {
 
     //On iOS, the user needs to give permission for cloud messaging
     //On Android it's authorized automatically
-    NotificationSettings settings = await messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
+    // NotificationSettings settings = await messaging.requestPermission(
+    //   alert: true,
+    //   announcement: false,
+    //   badge: true,
+    //   carPlay: false,
+    //   criticalAlert: false,
+    //   provisional: false,
+    //   sound: true,
+    // );
 
-    print('User granted permission: ${settings.authorizationStatus}');
-    if (settings.authorizationStatus.toString() ==
-        "AuthorizationStatus.authorized") {
-      setState(() {
-        _messagerInitialized = true;
-      });
-    }
-    if (!_messagerInitialized) {
-      print("Permission for messages not given!");
-    }
+
+    // print('User granted permission: ${settings.authorizationStatus}');
+    // if (settings.authorizationStatus.toString() ==
+    //     "AuthorizationStatus.authorized") {
+    //   setState(() {
+    //     _messagerInitialized = true;
+    //   });
+    // }
+    // if (!_messagerInitialized) {
+    //   print("Permission for messages not given!");
+    // }
 
     if (_messagerInitialized = true) {
       //This should connect to the foreground message handler
@@ -94,9 +99,30 @@ class _AppState extends State<App> {
     }
   }
 
+  void checkSavedLogin() async {
+    bool saved = await InternalUser.checkSavedLogin();
+    if(saved) {
+      String? error = await InternalUser.loginWithStoredInstance();
+      if(error == null) {
+        setState(() {
+          _savedLogin = true;
+        });
+      } else {
+        print("Error logging in with saved credentials!");
+        print(error);
+        await InternalUser.clearStoredInstance();
+      }
+    }
+    setState(() {
+      _loginInitialized = true;
+    });
+
+  }
+
   @override
   void initState() {
     initializeFlutterFire();
+    checkSavedLogin();
     super.initState();
     setupInteractedMessage();
   }
@@ -115,12 +141,29 @@ class _AppState extends State<App> {
   Widget build(BuildContext context) {
     // scaffold is a layout for the major Material Components
 
-    return MaterialApp(
-      home: LoginPage(
-          usernameController: usernameController,
-          passwordController: passwordController,
-          projectIdController: projectIdController,
-          adminProjectIdController: adminProjectIdController),
-    );
+    if(_savedLogin && _loginInitialized) {
+      bool isAdmin = false;
+      if (InternalUser.instance()?.isAdmin == true) {
+        isAdmin = true;
+      }
+      return MaterialApp(
+        home: isAdmin
+            ? AdminPage(adminProjectIdController: adminProjectIdController)
+            : UserPage());
+    }
+
+    if(_loginInitialized) {
+      return MaterialApp(
+        home: LoginPage(
+            usernameController: usernameController,
+            passwordController: passwordController,
+            projectIdController: projectIdController,
+            adminProjectIdController: adminProjectIdController),
+      );
+    } else {
+      return MaterialApp(
+        home: Text("Loading...")
+      );
+    }
   }
 }
