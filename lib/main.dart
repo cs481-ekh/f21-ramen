@@ -162,7 +162,12 @@ class _AppState extends State<App> {
       );
     } else {
       return MaterialApp(
-        home: Text("Loading...")
+
+        home: Scaffold(
+            body: Center(
+              child: Image.asset("assets/images/logo.png")
+            )
+        )
       );
     }
   }
