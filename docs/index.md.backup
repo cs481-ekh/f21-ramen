@@ -48,6 +48,6 @@ When a hard coded notification is scheduled from a device, an independent Node.j
 
 Presently, notification management within the app itself is mostly non-existent; admin users don't have any management or control options once notifications are submitted. 
 
-User management can also only be done through the Firebase console. More robust user and project management is planned for the future, with basic UI elements in place for coming implementations.
+User management can also only be done through the Firebase console. More robust user and project management is planned for the future, with basic UI elements in place for coming implementation.
   
 ![](project-list.png)
