@@ -42,7 +42,7 @@ If the app is open and logged into a regular user account, the notification will
 
 Selecting either notifications will open the notification's containing link in the device's default browser. 
 
-![](link-site.png)
+![](images/link-site.png)
 
 When a hard coded notification is scheduled from a device, an independent Node.js server captures these notifications and sends them to [Firebase](https://firebase.google.com/) to be distributed at the specified time. 
 
@@ -50,4 +50,4 @@ Presently, notification management within the app itself is mostly non-existent;
 
 User management can also only be done through the Firebase console. More robust user and project management is planned for the future, with basic UI elements in place for coming implementations.
   
-![](project-list.png)
+![](images/project-list.png)
