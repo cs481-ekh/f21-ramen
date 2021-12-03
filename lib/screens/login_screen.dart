@@ -13,15 +13,13 @@ class LoginPage extends StatelessWidget {
   final TextEditingController projectIdController;
   final TextEditingController adminProjectIdController;
 
-  LoginPage(
-      {Key? key, required this.usernameController,
-        required this.passwordController,
-        required this.projectIdController,
-        required this.adminProjectIdController}) : super(key: key);
+  LoginPage({Key? key, required this.usernameController,
+    required this.passwordController,
+    required this.projectIdController,
+    required this.adminProjectIdController}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('EMA'),
@@ -79,7 +77,8 @@ class LoginPage extends StatelessWidget {
             ),
             Flexible(
                 flex: 3,
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center, children: [
                   Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: TextButton(
@@ -90,42 +89,46 @@ class LoginPage extends StatelessWidget {
                           textStyle: const TextStyle(fontSize: 20),
                           backgroundColor: Colors.blue),
                       onPressed: () async {
-                        String userSigninCheck = await signinUser(usernameController, passwordController);
+                        String userSigninCheck = await signinUser(
+                            usernameController.text, passwordController.text);
                         bool isAdmin = false;
-                        if(InternalUser.instance()?.isAdmin == true){
-                            isAdmin = true;
+                        if (InternalUser.instance()?.isAdmin == true) {
+                          isAdmin = true;
                         }
-                        userSigninCheck == "" // navigate to appropriate user page
-                            ? Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => isAdmin
-                                    ? AdminPage(
-                                    adminProjectIdController:
-                                    adminProjectIdController)
-                                    : UserPage()))
-                            : showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text("Error"),
-                                content: SingleChildScrollView(
-                                  child: ListBody(
-                                    children: <Widget>[
-                                      Text(userSigninCheck),
-                                    ],
+                        if (userSigninCheck == "") { // navigate to appropriate user page
+                          InternalUser.setStoredInstance(usernameController.text, passwordController.text);
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                  isAdmin
+                                      ? AdminPage(adminProjectIdController: adminProjectIdController)
+                                      : UserPage()));
+                        }
+                        else {
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text("Error"),
+                                  content: SingleChildScrollView(
+                                    child: ListBody(
+                                      children: <Widget>[
+                                        Text(userSigninCheck),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: const Text('OK'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ],
-                              );
-                            });
+                                  actions: <Widget>[
+                                    TextButton(
+                                      child: const Text('OK'),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ],
+                                );
+                              });
+                        }
                       },
                       child: const Text('Login'),
                     ),
@@ -172,7 +175,11 @@ class LoginPage extends StatelessWidget {
                             ? Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => ProjectIdPage(usernameController: usernameController, passwordController: passwordController, projectIdController: projectIdController)))
+                                builder: (context) =>
+                                    ProjectIdPage(
+                                        usernameController: usernameController,
+                                        passwordController: passwordController,
+                                        projectIdController: projectIdController)))
                             : showDialog(
                             context: context,
                             builder: (BuildContext context) {
