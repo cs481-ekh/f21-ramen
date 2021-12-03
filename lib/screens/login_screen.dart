@@ -25,23 +25,23 @@ class LoginPage extends StatelessWidget {
         title: const Text('EMA'),
         //This is just for testing and should be removed once a system is in
         //place to subscribe devices based on users
-        actions: <Widget>[
-          PopupMenuButton(
-            onSelected: onActionSelected,
-            itemBuilder: (BuildContext context) {
-              return [
-                const PopupMenuItem(
-                  value: 'subscribe',
-                  child: Text('Subscribe to topic'),
-                ),
-                const PopupMenuItem(
-                  value: 'unsubscribe',
-                  child: Text('Unsubscribe to topic'),
-                )
-              ];
-            },
-          ),
-        ],
+        // actions: <Widget>[
+        //   PopupMenuButton(
+        //     onSelected: onActionSelected,
+        //     itemBuilder: (BuildContext context) {
+        //       return [
+        //         const PopupMenuItem(
+        //           value: 'subscribe',
+        //           child: Text('Subscribe to topic'),
+        //         ),
+        //         const PopupMenuItem(
+        //           value: 'unsubscribe',
+        //           child: Text('Unsubscribe to topic'),
+        //         )
+        //       ];
+        //     },
+        //   ),
+        // ],
       ),
       // body is majority of the screen
       body: Center(
