@@ -43,15 +43,15 @@ Future<String> addProjectToDatabase(String projectId, String description) {
 
 Future<http.Response> scheduleNotification(int? minute, int? hour, int? year, int? month, int? day) {
   return http.post(
-    Uri.parse('http://localhost:3000/test'),
+    Uri.parse('http://192.168.0.15:3000/test'),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
     body: jsonEncode(<String, dynamic>{
       'topic': 'notif_test',
       'url': 'https://nodejs.dev/learn/get-http-request-body-data-using-nodejs',
-      'title': 'JSON POST test',
-      'message': 'Tedious',
+      'title': 'Test notification',
+      'message': 'It works!',
       'year': year,
       'month': month,
       'day': day,
